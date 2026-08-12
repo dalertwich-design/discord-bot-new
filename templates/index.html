@@ -16,448 +16,128 @@
         body {
             margin: 0;
             padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', sans-serif;
             background-color: var(--bg-dark);
             color: var(--text-light);
             display: flex;
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
+            padding-bottom: 100px; /* Отступ для панели */
         }
 
-        /* Модальное окно регистрации (обязательное при первом входе) */
-        #authModal {
+        /* Панель навигации (Dock) */
+        .dock {
             position: fixed;
-            inset: 0;
-            background: rgba(5, 5, 9, 0.9);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            padding: 20px;
-        }
-
-        .auth-card {
-            background: var(--card-bg);
-            border: 1px solid rgba(124, 58, 237, 0.4);
-            padding: 30px;
-            border-radius: 20px;
-            width: 100%;
-            max-width: 380px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-            text-align: center;
-        }
-
-        .auth-card h2 { margin-top: 0; color: #fff; }
-        .auth-card input, .auth-card textarea {
-            width: 100%;
-            padding: 12px;
-            margin: 8px 0 15px 0;
-            background: #050509;
-            border: 1px solid var(--primary);
-            border-radius: 10px;
-            color: white;
-            box-sizing: border-box;
-        }
-
-        .container {
-            width: 90%;
-            max-width: 450px;
-            margin-top: 20px;
-            margin-bottom: 40px;
-        }
-
-        /* Стиль профиля как в Discord (похоже на скриншот) */
-        .discord-profile {
-            background: #111018;
-            border-radius: 20px;
-            border: 1px solid rgba(124, 58, 237, 0.3);
-            overflow: hidden;
-            margin-bottom: 25px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.5);
-        }
-
-        .profile-banner {
-            height: 90px;
-            background: linear-gradient(135deg, #7c3aed, #3b82f6);
-            position: relative;
-        }
-
-        .profile-body {
-            padding: 0 20px 20px 20px;
-            position: relative;
-        }
-
-        .profile-avatar-container {
-            position: relative;
-            width: 80px;
-            height: 80px;
-            margin-top: -45px;
-            margin-bottom: 12px;
-        }
-
-        .profile-avatar {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            border: 4px solid #111018;
-            object-fit: cover;
-            background: #222;
-        }
-
-        .profile-name {
-            font-size: 20px;
-            font-weight: 800;
-            color: #fff;
-            margin-bottom: 2px;
-        }
-
-        .profile-tag {
-            font-size: 13px;
-            color: var(--text-muted);
-            margin-bottom: 12px;
-        }
-
-        .profile-bio {
-            font-size: 13px;
-            color: #d1d5db;
-            background: rgba(255,255,255,0.03);
+            bottom: 20px;
+            background: rgba(15, 14, 23, 0.8);
+            backdrop-filter: blur(10px);
             padding: 10px;
-            border-radius: 10px;
-            border-left: 3px solid var(--primary);
-            margin-bottom: 15px;
-            white-space: pre-wrap;
-        }
-
-        .edit-toggle-btn {
-            background: rgba(124, 58, 237, 0.2);
-            color: #a78bfa;
-            border: 1px solid var(--primary);
-            padding: 6px 12px;
-            border-radius: 8px;
-            font-size: 12px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        .edit-toggle-btn:hover { background: rgba(124, 58, 237, 0.4); }
-
-        /* Карточки товаров */
-        .card {
-            background: var(--card-bg);
-            padding: 20px;
             border-radius: 20px;
-            border: 1px solid rgba(124, 58, 237, 0.3);
-            margin-bottom: 20px;
-            box-sizing: border-box;
+            display: flex;
+            gap: 10px;
+            border: 1px solid rgba(255,255,255,0.1);
+            z-index: 999;
         }
 
-        .card h3 { margin-top: 0; margin-bottom: 8px; color: #fff; }
-        .product-features {
-            font-size: 13px;
-            color: var(--text-muted);
-            margin: 10px 0 15px 0;
-            padding-left: 15px;
-        }
-        .product-features li { margin-bottom: 4px; }
-
-        .price-tag {
-            font-size: 22px;
-            font-weight: 900;
-            color: #3b82f6;
-            margin-bottom: 15px;
-        }
-
-        button {
-            width: 100%;
+        .dock-btn {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.1);
             padding: 12px;
-            background: var(--primary);
-            border: none;
-            border-radius: 10px;
-            color: white;
-            font-weight: bold;
+            border-radius: 12px;
             cursor: pointer;
-            transition: background 0.2s;
+            color: #fff;
+            transition: 0.3s;
         }
-        button:hover { background: #6d28d9; }
+        .dock-btn:hover { background: var(--primary); border-color: var(--primary); }
 
-        /* Билет-чек (Uiverse стиль) */
-        #receiptBox {
-            display: none;
-            width: 100%;
-            max-width: 380px;
-            margin: 20px auto 0 auto;
-            background: #161522;
-            border: 1px solid rgba(124, 58, 237, 0.5);
-            border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8);
-            box-sizing: border-box;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .ticket-top { padding: 24px; position: relative; }
-        .ticket-badge {
-            display: inline-block;
-            font-size: 10px;
-            font-weight: bold;
-            letter-spacing: 1px;
-            color: #a78bfa;
-            border: 1px solid rgba(124, 58, 237, 0.5);
-            padding: 4px 10px;
-            border-radius: 20px;
-            text-transform: uppercase;
-            float: right;
-        }
-        .ticket-brand { font-size: 16px; font-weight: 800; color: #fff; margin-bottom: 15px; }
-        .ticket-title { font-size: 24px; font-weight: 900; color: #fff; text-transform: uppercase; margin-bottom: 5px; }
-        .ticket-subtitle { font-size: 12px; color: var(--text-muted); margin-bottom: 20px; }
-        
-        .ticket-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
-        .ticket-label { font-size: 10px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px; }
-        .ticket-value { font-size: 14px; font-weight: bold; color: #fff; }
-
-        .ticket-divider {
-            position: relative;
-            height: 20px;
-            background: var(--bg-dark);
-            display: flex;
-            align-items: center;
-        }
-        .ticket-divider::before, .ticket-divider::after {
-            content: '';
-            position: absolute;
-            width: 20px; height: 20px;
-            background: var(--bg-dark);
-            border-radius: 50%;
-            top: 50%; transform: translateY(-50%);
-            border: 1px solid rgba(124, 58, 237, 0.4);
-        }
-        .ticket-divider::before { left: -11px; }
-        .ticket-divider::after { right: -11px; }
-        .dashed-line { width: 100%; border-top: 2px dashed rgba(124, 58, 237, 0.3); margin: 0 15px; }
-
-        .ticket-bottom {
-            padding: 20px 24px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: rgba(0,0,0,0.3);
-        }
-        .barcode { font-family: monospace; font-size: 20px; letter-spacing: 2px; color: #fff; }
-        .barcode-sub { font-size: 9px; color: var(--text-muted); margin-top: 4px; }
-        
-        .close-ticket-btn {
-            background: #ef4444;
-            margin-top: 15px;
-        }
-        .close-ticket-btn:hover { background: #dc2626; }
+        /* Остальные стили (оставляем как были) */
+        .container { width: 90%; max-width: 450px; margin-top: 20px; }
+        .discord-profile { background: #111018; border-radius: 20px; border: 1px solid rgba(124, 58, 237, 0.3); margin-bottom: 25px; }
+        .profile-banner { height: 90px; background: linear-gradient(135deg, #7c3aed, #3b82f6); border-radius: 20px 20px 0 0; }
+        .profile-body { padding: 0 20px 20px 20px; }
+        .profile-avatar { width: 80px; height: 80px; border-radius: 50%; border: 4px solid #111018; margin-top: -45px; margin-bottom: 12px; object-fit: cover; }
+        .card { background: var(--card-bg); padding: 20px; border-radius: 20px; margin-bottom: 20px; }
+        button { width: 100%; padding: 12px; background: var(--primary); border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer; }
+        #receiptBox { display: none; margin-top: 20px; padding: 20px; background: #161522; border-radius: 20px; }
+        #authModal { position: fixed; inset: 0; background: rgba(5, 5, 9, 0.9); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .auth-card { background: var(--card-bg); padding: 30px; border-radius: 20px; width: 90%; max-width: 380px; }
+        input, textarea { width: 100%; padding: 12px; margin: 8px 0 15px 0; background: #050509; border: 1px solid var(--primary); border-radius: 10px; color: white; box-sizing: border-box; }
     </style>
 </head>
 <body>
 
-    <!-- МОДАЛЬНОЕ ОКНО РЕГИСТРАЦИИ (ПОЯВЛЯЕТСЯ, ЕСЛИ НЕТ ПРОФИЛЯ) -->
+    <!-- ПАНЕЛЬ НАВИГАЦИИ -->
+    <div class="dock">
+        <button class="dock-btn" onclick="location.reload()">🏠</button>
+        <button class="dock-btn" onclick="alert('Поиск в разработке')">🔍</button>
+        <button class="dock-btn" onclick="alert('Почта пуста')">✉️</button>
+        <button class="dock-btn" onclick="alert('Галерея')">📷</button>
+        <button class="dock-btn" onclick="alert('Избранное')">⭐</button>
+        <button class="dock-btn" onclick="document.querySelector('.discord-profile').scrollIntoView({behavior:'smooth'})">👤</button>
+        <button class="dock-btn" onclick="alert('Настройки')">⚙️</button>
+    </div>
+
+    <!-- ОСТАЛЬНОЙ КОНТЕНТ -->
     <div id="authModal">
         <div class="auth-card">
-            <h2>Регистрация в Art Shop</h2>
-            <p style="font-size: 13px; color: var(--text-muted);">Создайте профиль, чтобы совершать быстрые заказы</p>
-            <input type="text" id="regUsername" placeholder="Ваш никнэйм (например: dalersh)">
-            <input type="text" id="regAvatar" placeholder="Ссылка на аватарку (URL)">
-            <textarea id="regBio" placeholder="О себе / Статус (например: Xamrik best 💋)" rows="3"></textarea>
-            <button onclick="registerUser()">Войти в систему</button>
+            <h2>Регистрация</h2>
+            <input type="text" id="regUsername" placeholder="Никнейм">
+            <input type="text" id="regAvatar" placeholder="URL Аватарки">
+            <textarea id="regBio" placeholder="Статус"></textarea>
+            <button onclick="registerUser()">Войти</button>
         </div>
     </div>
 
     <div class="container">
-        <!-- БЛОК ПРОФИЛЯ (СТИЛЬ DISCORD) -->
         <div class="discord-profile">
             <div class="profile-banner"></div>
             <div class="profile-body">
-                <div class="profile-avatar-container">
-                    <img id="viewAvatar" src="" alt="Avatar" class="profile-avatar">
-                </div>
-                <div class="profile-name" id="viewUsername">User</div>
-                <div class="profile-tag" id="viewTag">@username • Клиент магазина</div>
-                <div class="profile-bio" id="viewBio">Статус не указан</div>
-                
-                <button class="edit-toggle-btn" onclick="openEditProfile()">Редактировать профиль</button>
+                <img id="viewAvatar" src="" class="profile-avatar">
+                <h2 id="viewUsername">User</h2>
+                <p id="viewBio" style="font-size: 13px; color: var(--text-muted);">...</p>
+                <button onclick="openEditProfile()">Редактировать профиль</button>
             </div>
-        </div>
-
-        <!-- КАТАЛОГ ТОВАРОВ -->
-        <div class="card">
-            <h3>💬 Discord Nitro Full</h3>
-            <p style="font-size: 13px; color: var(--text-muted);">Официальная премиум подписка на ваш аккаунт Discord.</p>
-            <ul class="product-features">
-                <li>✨ Анимированные аватары и баннеры</li>
-                <li>🚀 2 буста сервера в подарок</li>
-                <li>📁 Загрузка файлов до 500 МБ</li>
-            </ul>
-            <div class="price-tag">200$</div>
-            <button onclick="makeOrder('Discord Nitro Full', '200$')">Заказать товар</button>
         </div>
 
         <div class="card">
-            <h3>✈️ Telegram Premium</h3>
-            <p style="font-size: 13px; color: var(--text-muted);">Расширенные возможности мессенджера Telegram на 1 месяц.</p>
-            <ul class="product-features">
-                <li>⭐ Увеличенные лимиты и папки</li>
-                <li>🎤 Расшифровка голосовых сообщений</li>
-                <li>🦄 Уникальные эмодзи и реакции</li>
-            </ul>
-            <div class="price-tag">150$</div>
-            <button onclick="makeOrder('Telegram Premium', '150$')">Заказать товар</button>
-        </div>
-
-        <!-- БИЛЕТ / ЧЕК -->
-        <div id="receiptBox">
-            <div class="ticket-top">
-                <div class="ticket-badge">ЗАКАЗ ГОТОВ</div>
-                <div class="ticket-brand">❖ ART SHOP</div>
-                
-                <div class="ticket-title" id="recProduct">NITRO FULL</div>
-                <div class="ticket-subtitle">Чек успешного оформления заказа</div>
-
-                <div class="ticket-grid">
-                    <div>
-                        <div class="ticket-label">Покупатель</div>
-                        <div class="ticket-value" id="recUser">User</div>
-                    </div>
-                    <div>
-                        <div class="ticket-label">Сумма</div>
-                        <div class="ticket-value" id="recPrice">200$</div>
-                    </div>
-                    <div>
-                        <div class="ticket-label">Статус</div>
-                        <div class="ticket-value" style="color: #4ade80;">Ожидает связи</div>
-                    </div>
-                    <div>
-                        <div class="ticket-label">Менеджер</div>
-                        <div class="ticket-value">На связи</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="ticket-divider">
-                <div class="dashed-line"></div>
-            </div>
-
-            <div class="ticket-bottom" style="flex-direction: column; align-items: stretch;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <div class="barcode">|||| | |||||| ||||</div>
-                        <div class="barcode-sub">UI-77-9X04-ART</div>
-                    </div>
-                    <div style="text-align: right;">
-                        <div style="font-size: 9px; color: var(--text-muted);">ID СЕССИИ</div>
-                        <div style="font-size: 20px; font-weight: 900; color: #a78bfa;">#42</div>
-                    </div>
-                </div>
-                <!-- Кнопка закрытия билета -->
-                <button class="close-ticket-btn" onclick="closeReceipt()">Закрыть чек</button>
-            </div>
+            <h3>💬 Discord Nitro Full</h3>
+            <p>Премиум подписка.</p>
+            <button onclick="makeOrder('Nitro Full', '200$')">Заказать товар</button>
         </div>
     </div>
 
     <script>
-        // Проверка при загрузке: есть ли сохраненный профиль
-        window.onload = () => {
-            const savedUser = localStorage.getItem('art_user');
-            if (savedUser) {
-                // Если профиль есть — скрываем модальное окно и заполняем данные
-                document.getElementById('authModal').style.display = 'none';
-                loadProfileData();
-            } else {
-                // Если нет — показываем окно регистрации
-                document.getElementById('authModal').style.display = 'flex';
-            }
-        }
-
-        // Функция регистрации / сохранения профиля
         function registerUser() {
-            const username = document.getElementById('regUsername').value.trim();
-            const avatar = document.getElementById('regAvatar').value.trim();
-            const bio = document.getElementById('regBio').value.trim();
-
-            if (!username) {
-                alert('Пожалуйста, введите ваш никнейм!');
-                return;
-            }
-
-            // Сохраняем в localStorage браузера
-            localStorage.setItem('art_user', username);
-            localStorage.setItem('art_avatar', avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150');
-            localStorage.setItem('art_bio', bio || 'Статус не указан');
-
-            // Скрываем модальное окно и обновляем профиль на странице
-            document.getElementById('authModal').style.display = 'none';
-            loadProfileData();
+            const u = document.getElementById('regUsername').value;
+            localStorage.setItem('art_user', u);
+            localStorage.setItem('art_avatar', document.getElementById('regAvatar').value);
+            localStorage.setItem('art_bio', document.getElementById('regBio').value);
+            location.reload();
         }
 
-        // Загрузка данных профиля на страницу
-        function loadProfileData() {
-            const user = localStorage.getItem('art_user') || 'User';
-            const avatar = localStorage.getItem('art_avatar') || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150';
-            const bio = localStorage.getItem('art_bio') || '...';
-
-            document.getElementById('viewUsername').innerText = user;
-            document.getElementById('viewTag').innerText = '@' + user.toLowerCase() + ' • Клиент';
-            document.getElementById('viewAvatar').src = avatar;
-            document.getElementById('viewBio').innerText = bio;
-        }
-
-        // Открытие модального окна для редактирования профиля
-        function openEditProfile() {
-            document.getElementById('regUsername').value = localStorage.getItem('art_user') || '';
-            document.getElementById('regAvatar').value = localStorage.getItem('art_avatar') || '';
-            document.getElementById('regBio').value = localStorage.getItem('art_bio') || '';
-            document.getElementById('authModal').style.display = 'flex';
-        }
-
-        // Оформление заказа и отправка данных боту
-        async function makeOrder(productName, productPrice) {
-            const user = localStorage.getItem('art_user');
-            if (!user) {
-                alert('Пожалуйста, пройдите регистрацию!');
-                document.getElementById('authModal').style.display = 'flex';
-                return;
-            }
-
-            try {
-                // Отправляем запрос на бэкенд Flask, чтобы бот прислал уведомление в Discord
-                const res = await fetch('/api/order', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        product: productName,
-                        price: productPrice,
-                        discord: user
-                    })
-                });
-
-                const data = await res.json();
-                if (data.status === 'success') {
-                    // Заполняем данные в билет
-                    document.getElementById('recProduct').innerText = productName;
-                    document.getElementById('recUser').innerText = user;
-                    document.getElementById('recPrice').innerText = productPrice;
-                    
-                    // Показываем билет и плавно прокручиваем к нему
-                    const receipt = document.getElementById('receiptBox');
-                    receipt.style.display = 'block';
-                    receipt.scrollIntoView({ behavior: 'smooth' });
-                } else {
-                    alert('Ошибка при оформлении заказа на сервере.');
-                }
-            } catch (err) {
-                console.error(err);
-                alert('Ошибка соединения с сервером.');
+        function loadProfile() {
+            const u = localStorage.getItem('art_user');
+            if (u) {
+                document.getElementById('authModal').style.display = 'none';
+                document.getElementById('viewUsername').innerText = u;
+                document.getElementById('viewAvatar').src = localStorage.getItem('art_avatar');
+                document.getElementById('viewBio').innerText = localStorage.getItem('art_bio');
             }
         }
 
-        // Закрытие чека кнопкой
-        function closeReceipt() {
-            document.getElementById('receiptBox').style.display = 'none';
+        function openEditProfile() { document.getElementById('authModal').style.display = 'flex'; }
+        
+        async function makeOrder(prod, price) {
+            const res = await fetch('/api/order', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({product: prod, price: price, discord: localStorage.getItem('art_user')})
+            });
+            alert('Заказ оформлен!');
         }
+
+        loadProfile();
     </script>
 </body>
-</html>
+</html

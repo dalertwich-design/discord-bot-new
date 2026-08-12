@@ -76,9 +76,9 @@
             background: #7c3aed;
         }
 
-        /* ОРИГИНАЛЬНЫЕ СТИЛИ БИЛЕТА UIVERSE */
+        /* Стиль билета Uiverse */
         .ticket-canvas {
-            display: none; /* Скрыт до заказа */
+            display: none;
             width: 100%;
             display: flex;
             align-items: center;
@@ -107,34 +107,10 @@
             color: var(--t-text-main);
             font-family: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
             transform-style: preserve-3d;
-            transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.6s ease;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05);
             background: transparent;
             filter: drop-shadow(0px 0px 10px rgba(0, 0, 0, 0.5));
             box-sizing: border-box;
-        }
-
-        .ticket-wrapper:hover .ticket {
-            transform: rotateX(5deg) rotateY(-10deg) scale(1.02);
-            box-shadow: 20px 20px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1), -5px -5px 20px var(--t-accent-glow);
-        }
-
-        .ticket::after {
-            content: "";
-            position: absolute;
-            inset: 0;
-            border-radius: 1em;
-            pointer-events: none;
-            background: linear-gradient(115deg, transparent 0%, transparent 40%, rgba(255, 255, 255, 0.1) 45%, rgba(255, 255, 255, 0.3) 50%, rgba(255, 255, 255, 0.1) 55%, transparent 60%, transparent 100%);
-            z-index: 10;
-            background-size: 250% 250%;
-            background-position: 100% 100%;
-            transition: background-position 0.6s cubic-bezier(0.23, 1, 0.32, 1);
-            mix-blend-mode: overlay;
-        }
-
-        .ticket-wrapper:hover .ticket::after {
-            background-position: 0% 0%;
         }
 
         .t-main {
@@ -149,26 +125,6 @@
             border-top-right-radius: 1em;
         }
 
-        .t-main::after {
-            content: "";
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-image: linear-gradient(rgba(124, 58, 237, 0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(124, 58, 237, 0.15) 1px, transparent 1px);
-            background-size: 2em 2em;
-            opacity: 0.6;
-            z-index: 0;
-            pointer-events: none;
-            transform: perspective(500px) rotateX(20deg) scale(1.5);
-            animation: grid-scroll 20s linear infinite;
-        }
-
-        @keyframes grid-scroll {
-            0% { background-position: 0 0; }
-            100% { background-position: 0 4em; }
-        }
-
-        .t-content { position: relative; z-index: 1; }
-
         .t-header {
             display: flex;
             justify-content: space-between;
@@ -182,7 +138,6 @@
             gap: 0.5em;
             font-weight: 900;
             font-size: 1.2em;
-            letter-spacing: -0.05em;
             color: #fff;
         }
 
@@ -190,7 +145,6 @@
             width: 1.5em;
             height: 1.5em;
             fill: var(--t-accent);
-            filter: drop-shadow(0 0 5px var(--t-accent));
         }
 
         .t-type {
@@ -210,10 +164,7 @@
             line-height: 1.1;
             margin-bottom: 0.2em;
             text-transform: uppercase;
-            background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: #fff;
         }
 
         .t-subtitle {
@@ -227,12 +178,6 @@
             grid-template-columns: 1fr 1fr;
             gap: 1.5em;
             margin-bottom: 1em;
-        }
-
-        .t-detail-item {
-            display: flex;
-            flex-direction: column;
-            gap: 0.2em;
         }
 
         .t-label {
@@ -275,13 +220,6 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            position: relative;
-        }
-
-        .t-barcode-container {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5em;
         }
 
         .t-barcode {
@@ -296,25 +234,19 @@
             font-size: 0.7em;
             color: var(--t-text-muted);
             letter-spacing: 0.2em;
-        }
-
-        .t-admit {
-            text-align: right;
+            margin-top: 5px;
         }
 
         .t-admit-text {
             font-size: 0.7em;
             text-transform: uppercase;
-            letter-spacing: 0.1em;
             color: var(--t-text-muted);
         }
 
         .t-admit-num {
             font-size: 2.5em;
             font-weight: 900;
-            line-height: 1;
             color: var(--t-accent);
-            text-shadow: 0 0 15px var(--t-accent-glow);
         }
     </style>
 </head>
@@ -342,33 +274,40 @@
             <h3>💬 Nitro Full</h3>
             <p>Официальная подписка Discord Nitro.</p>
             <p style="font-size: 20px; font-weight: bold;">200$</p>
-            <button onclick="makeOrder('Nitro Full', '200$', 'inputUsername')">Заказать</button>
+            <input type="text" id="inputNitro" placeholder="Ваш Discord / Ник">
+            <button onclick="makeOrder('Nitro Full', '200$', 'inputNitro')">Заказать</button>
         </div>
 
-        <!-- Билет в стиле Uiverse -->
+        <div class="card">
+            <h3>✈️ Telegram Premium</h3>
+            <p>Премиум подписка Telegram.</p>
+            <p style="font-size: 20px; font-weight: bold;">150$</p>
+            <input type="text" id="inputTg" placeholder="Ваш Telegram / Ник">
+            <button onclick="makeOrder('Telegram Premium', '150$', 'inputTg')">Заказать</button>
+        </div>
+
+        <!-- Билет-чек -->
         <div class="ticket-canvas" id="receiptBox">
             <div class="ticket-wrapper">
                 <div class="ticket">
                     <div class="t-main">
-                        <div class="t-content">
-                            <div class="t-header">
-                                <div class="t-logo">
-                                    <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
-                                    ART SHOP
-                                </div>
-                                <div class="t-type">DEV PASS</div>
+                        <div class="t-header">
+                            <div class="t-logo">
+                                <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
+                                ART SHOP
                             </div>
-                            <div class="t-title" id="recProduct">Nitro Full</div>
-                            <div class="t-subtitle">Digital Verified Order</div>
-                            <div class="t-details">
-                                <div class="t-detail-item">
-                                    <span class="t-label">Покупатель</span>
-                                    <span class="t-value" id="recDiscord">User</span>
-                                </div>
-                                <div class="t-detail-item">
-                                    <span class="t-label">Стоимость</span>
-                                    <span class="t-value" id="recPrice">200$</span>
-                                </div>
+                            <div class="t-type">VIP PASS</div>
+                        </div>
+                        <div class="t-title" id="recProduct">Nitro Full</div>
+                        <div class="t-subtitle">Digital Verified Order</div>
+                        <div class="t-details">
+                            <div class="t-detail-item">
+                                <span class="t-label">Покупатель</span>
+                                <span class="t-value" id="recDiscord">User</span>
+                            </div>
+                            <div class="t-detail-item">
+                                <span class="t-label">Стоимость</span>
+                                <span class="t-value" id="recPrice">200$</span>
                             </div>
                         </div>
                     </div>
@@ -376,11 +315,11 @@
                         <div class="t-perf-line"></div>
                     </div>
                     <div class="t-stub">
-                        <div class="t-barcode-container">
+                        <div>
                             <div class="t-barcode"></div>
                             <div class="t-barcode-id">UI-77-9X04-ART</div>
                         </div>
-                        <div class="t-admit">
+                        <div style="text-align: right;">
                             <div class="t-admit-text">ID сессии</div>
                             <div class="t-admit-num">42</div>
                         </div>
@@ -391,74 +330,76 @@
     </div>
 
     <script>
-    function saveProfile() {
-        const u = document.getElementById('inputUsername').value;
-        const a = document.getElementById('inputAvatar').value;
-        const b = document.getElementById('inputBio').value;
-        
-        localStorage.setItem('u', u); 
-        localStorage.setItem('a', a); 
-        localStorage.setItem('b', b);
-        
-        document.getElementById('displayUsername').innerText = u || 'User';
-        if(a) document.getElementById('displayAvatar').src = a;
-        document.getElementById('displayBio').innerText = b || '...';
-        
-        alert('Профиль сохранен!');
-    }
-
-    // Универсальная функция заказа для любых карточек
-    async function makeOrder(prod, price, inputId) {
-        // Берем ник либо из поля ввода карточки, либо из профиля
-        let user = '';
-        if (inputId) {
-            user = document.getElementById(inputId).value;
-        }
-        if (!user || user.trim() === '') {
-            user = document.getElementById('displayUsername').innerText;
-        }
-        if (!user || user === 'User') {
-            user = 'Аноним';
-        }
-
-        const res = await fetch('/api/order', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({product: prod, price: price, discord: user})
-        });
-        
-        const data = await res.json();
-        if(data.status === 'success') {
-            document.getElementById('recProduct').innerText = prod;
-            document.getElementById('recDiscord').innerText = user;
-            document.getElementById('recPrice').innerText = price;
-            document.getElementById('receiptBox').style.display = 'flex';
-            // Плавная прокрутка к чеку
-            document.getElementById('receiptBox').scrollIntoView({ behavior: 'smooth' });
-        } else {
-            alert('Ошибка при оформлении заказа');
-        }
-    }
-
-    window.onload = () => {
-        if(localStorage.getItem('u')) {
-            const u = localStorage.getItem('u');
-            const a = localStorage.getItem('a');
-            const b = localStorage.getItem('b');
+        function saveProfile() {
+            const u = document.getElementById('inputUsername').value;
+            const a = document.getElementById('inputAvatar').value;
+            const b = document.getElementById('inputBio').value;
             
-            document.getElementById('displayUsername').innerText = u;
-            document.getElementById('inputUsername').value = u;
+            localStorage.setItem('u', u); 
+            localStorage.setItem('a', a); 
+            localStorage.setItem('b', b);
             
-            if(a) {
-                document.getElementById('displayAvatar').src = a;
-                document.getElementById('inputAvatar').value = a;
+            document.getElementById('displayUsername').innerText = u || 'User';
+            if(a) document.getElementById('displayAvatar').src = a;
+            document.getElementById('displayBio').innerText = b || '...';
+            
+            alert('Профиль сохранен!');
+        }
+
+        async function makeOrder(prod, price, inputId) {
+            let user = '';
+            if (inputId) {
+                const inputEl = document.getElementById(inputId);
+                if (inputEl) user = inputEl.value;
             }
-            if(b) {
-                document.getElementById('displayBio').innerText = b;
-                document.getElementById('inputBio').value = b;
+            if (!user || user.trim() === '') {
+                user = document.getElementById('displayUsername').innerText;
+            }
+            if (!user || user === 'User') {
+                user = 'Аноним';
+            }
+
+            try {
+                const res = await fetch('/api/order', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({product: prod, price: price, discord: user})
+                });
+                
+                const data = await res.json();
+                if(data.status === 'success') {
+                    document.getElementById('recProduct').innerText = prod;
+                    document.getElementById('recDiscord').innerText = user;
+                    document.getElementById('recPrice').innerText = price;
+                    document.getElementById('receiptBox').style.display = 'flex';
+                    document.getElementById('receiptBox').scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    alert('Ошибка от сервера: ' + (data.message || 'неизвестно'));
+                }
+            } catch (err) {
+                alert('Ошибка сети: ' + err);
             }
         }
-    }
-</script>
+
+        window.onload = () => {
+            if(localStorage.getItem('u')) {
+                const u = localStorage.getItem('u');
+                const a = localStorage.getItem('a');
+                const b = localStorage.getItem('b');
+                
+                document.getElementById('displayUsername').innerText = u;
+                document.getElementById('inputUsername').value = u;
+                
+                if(a) {
+                    document.getElementById('displayAvatar').src = a;
+                    document.getElementById('inputAvatar').value = a;
+                }
+                if(b) {
+                    document.getElementById('displayBio').innerText = b;
+                    document.getElementById('inputBio').value = b;
+                }
+            }
+        }
+    </script>
 </body>
 </html>

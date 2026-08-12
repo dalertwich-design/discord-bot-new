@@ -12,18 +12,24 @@ def home():
 
 @app.route('/api/order', methods=['POST'])
 def api_order():
-    data = request.json
-    bot.loop.create_task(send_receipt(data))
-    return jsonify({"status": "success"})
+    try:
+        data = request.json
+        print("Получены данные заказа:", data)
+        bot.loop.create_task(send_receipt(data))
+        return jsonify({"status": "success"})
+    except Exception as e:
+        print("Ошибка в api_order:", str(e))
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 async def send_receipt(data):
-    channel = bot.get_channel(1339521364708687875) 
+    channel_id = 1339521364708687875 
+    channel = bot.get_channel(channel_id)
     if channel:
         embed = discord.Embed(title="🧾 ART SHOP — DIGITAL RECEIPT", color=0x8b5cf6)
         embed.description = "Спасибо за покупку в нашем магазине! Ваш заказ успешно оформлен."
-        embed.add_field(name="🛒 Выбранный товар", value=data['product'], inline=False)
-        embed.add_field(name="👤 Покупатель", value=data['discord'], inline=True)
-        embed.add_field(name="💰 Стоимость", value=data['price'], inline=True)
+        embed.add_field(name="🛒 Выбранный товар", value=data.get('product', 'Товар'), inline=False)
+        embed.add_field(name="👤 Покупатель", value=data.get('discord', 'User'), inline=True)
+        embed.add_field(name="💰 Стоимость", value=data.get('price', '0$'), inline=True)
         embed.set_footer(text=f"ID транзакции: UI-77-9X04-ART")
         await channel.send(embed=embed)
 
@@ -40,5 +46,4 @@ async def on_ready():
     print(f'Бот {bot.user} запущен!')
 
 Thread(target=run_flask).start()
-
 bot.run(os.environ.get("DISCORD_TOKEN"))

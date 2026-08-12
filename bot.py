@@ -1,67 +1,97 @@
-import threading
 import os
+
 import discord
+
 from discord.ext import commands
+
 from flask import Flask, render_template, request, jsonify
 
-app = Flask(__name__)
+from threading import Thread
 
-# Настройка Discord бота
-intents = discord.Intents.default()
-intents.message_content = True
-bot = commands.Bot(command_prefix="!", intents=intents)
 
-# ID канала для уведомлений (можно указать или оставить пустым)
-CHANNEL_ID = None  
 
-@bot.event
-async def on_ready():
-    print(f'Бот авторизован как {bot.user}')
+app = Flask(__name__, template_folder='templates')
+
+
 
 @app.route('/')
-def index():
+
+def home():
+
     return render_template('index.html')
 
+
+
 @app.route('/api/order', methods=['POST'])
-def order():
-    data = request.json
-    product = data.get('product')
-    price = data.get('price')
-    discord_user = data.get('discord')
 
-    print(f"Новый заказ: {product} за {price} от {discord_user}")
+def api_order():
 
-    # Отправка уведомления в Discord, если указан ID канала
     try:
-        if CHANNEL_ID:
-            import asyncio
-            fut = asyncio.run_coroutine_threadsafe(
-                send_discord_notification(product, price, discord_user), bot.loop
-            )
-            fut.result(timeout=5)
+
+        data = request.json
+
+        print("Получены данные заказа:", data)
+
+        bot.loop.create_task(send_receipt(data))
+
+        return jsonify({"status": "success"})
+
     except Exception as e:
-        print(f"Ошибка отправки в Discord: {e}")
 
-    return jsonify({"status": "success"})
+        print("Ошибка в api_order:", str(e))
 
-async def send_discord_notification(product, price, discord_user):
-    channel = bot.get_channel(CHANNEL_ID)
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+
+async def send_receipt(data):
+
+    channel_id = 1339521364708687875
+
+    channel = bot.get_channel(channel_id)
+
     if channel:
-        await channel.send(f"🚨 **Новый заказ!**\n👤 Покупатель: **{discord_user}**\n📦 Товар: **{product}**\n💰 Цена: **{price}**")
 
-# Функция запуска веб-сервера Flask
+        embed = discord.Embed(title="🧾 ART SHOP — DIGITAL RECEIPT", color=0x8b5cf6)
+
+        embed.description = "Спасибо за покупку в нашем магазине! Ваш заказ успешно оформлен."
+
+        embed.add_field(name="🛒 Выбранный товар", value=data.get('product', 'Товар'), inline=False)
+
+        embed.add_field(name="👤 Покупатель", value=data.get('discord', 'User'), inline=True)
+
+        embed.add_field(name="💰 Стоимость", value=data.get('price', '0$'), inline=True)
+
+        embed.set_footer(text=f"ID транзакции: UI-77-9X04-ART")
+
+        await channel.send(embed=embed)
+
+
+
 def run_flask():
-    app.run(host='0.0.0.0', port=10000)
 
-if __name__ == '__main__':
-    # Запускаем Flask в отдельном потоке
-    flask_thread = threading.Thread(target=run_flask)
-    flask_thread.daemon = True
-    flask_thread.start()
+    port = int(os.environ.get("PORT", 8080))
 
-    # Запускаем Discord бота
-    TOKEN = os.environ.get("DISCORD_TOKEN")
-    if TOKEN:
-        bot.run(TOKEN)
-    else:
-        print("ОШИБКА: Токен Discord не найден в переменных окружения!")
+    app.run(host='0.0.0.0', port=port)
+
+
+
+intents = discord.Intents.default()
+
+intents.message_content = True
+
+bot = commands.Bot(command_prefix="!", intents=intents)
+
+
+
+@bot.event
+
+async def on_ready():
+
+    print(f'Бот {bot.user} запущен!')
+
+
+
+Thread(target=run_flask).start()
+
+bot.run(os.environ.get("DISCORD_TOKEN"))

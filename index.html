@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Art Shop — Web App</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #0c0a1d; color: #ffffff; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding-bottom: 90px; }
+        
+        /* Шапка шопа */
+        .header { width: 100%; max-width: 480px; padding: 20px; text-align: center; background: linear-gradient(135deg, #1e1b4b, #311042); border-bottom-left-radius: 24px; border-bottom-right-radius: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        .shop-avatar { width: 80px; height: 80px; border-radius: 50%; border: 3px solid #8b5cf6; margin-bottom: 10px; object-fit: cover; }
+        .shop-title { font-size: 22px; font-weight: bold; letter-spacing: 1px; }
+
+        /* Контент страницы */
+        .container { width: 100%; max-width: 480px; padding: 20px; }
+        .section { display: none; }
+        .section.active { display: block; }
+
+        /* Карточки товаров */
+        .card { background: #131129; border: 1px solid #2e265c; border-radius: 16px; padding: 20px; margin-bottom: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.3); transition: 0.3s; }
+        .card:hover { border-color: #8b5cf6; transform: translateY(-3px); }
+        .card h3 { font-size: 18px; color: #a78bfa; margin-bottom: 8px; }
+        .card p { font-size: 14px; color: #9ca3af; margin-bottom: 12px; }
+        .price { font-size: 20px; font-weight: bold; color: #fff; margin-bottom: 12px; }
+        
+        input, select { width: 100%; padding: 12px; margin-bottom: 12px; background: #0a0814; border: 1px solid #3b3075; border-radius: 8px; color: #fff; outline: none; }
+        button.buy-btn { width: 100%; padding: 12px; background: linear-gradient(135deg, #7c3aed, #4f46e5); border: none; border-radius: 8px; color: #fff; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        button.buy-btn:hover { opacity: 0.9; }
+
+        /* Нижняя панель навигации (как на скриншоте) */
+        .nav-bar { position: fixed; bottom: 20px; background: rgba(26, 22, 53, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 24px; padding: 10px 20px; display: flex; gap: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); z-index: 1000; }
+        .nav-item { background: none; border: none; color: #9ca3af; font-size: 20px; cursor: pointer; transition: 0.2s; padding: 8px; border-radius: 12px; }
+        .nav-item.active, .nav-item:hover { color: #fff; background: rgba(139, 92, 246, 0.2); }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150" class="shop-avatar" alt="Logo">
+        <div class="shop-title">ART SHOP</div>
+    </div>
+
+    <div class="container">
+        <!-- Секция 1: Информация о шопе (Тетрадь) -->
+        <div id="info-section" class="section active">
+            <div class="card">
+                <h3>📖 О нашем магазине</h3>
+                <p>Добро пожаловать в Art Shop! Мы предоставляем быстрый и надежный доступ к популярным цифровым сервисам. Работаем круглосуточно и без сбоев.</p>
+                <p>💬 Поддержка: <b>@admin_support</b></p>
+            </div>
+        </div>
+
+        <!-- Секция 2: Каталог товаров (Тележка) -->
+        <div id="shop-section" class="section">
+            <div class="card">
+                <h3>💬 Nitro Full</h3>
+                <p>Официальная подписка Discord Nitro на ваш аккаунт.</p>
+                <div class="price">200$</div>
+                <input type="text" id="discord-nitro" placeholder="Ваш Discord (например: user#0000)">
+                <button class="buy-btn" onclick="makeOrder('Nitro Full', '200$')">Заказать</button>
+            </div>
+            
+            <div class="card">
+                <h3>✈️ Telegram Premium</h3>
+                <p>Премиум подписка Telegram сроком на 1 месяц / год.</p>
+                <div class="price">150$</div>
+                <input type="text" id="discord-tg" placeholder="Ваш Discord (например: user#0000)">
+                <button class="buy-btn" onclick="makeOrder('Telegram Premium', '150$')">Заказать</button>
+            </div>
+        </div>
+
+        <!-- Секция 3: Профиль -->
+        <div id="profile-section" class="section">
+            <div class="card">
+                <h3>👤 Профиль пользователя</h3>
+                <p>Здесь отображается статус вашего подключения и последние действия.</p>
+                <p style="margin-top: 10px; color: #a78bfa;" id="status-text">Статус: Готов к заказу</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Нижняя панель с иконками -->
+    <div class="nav-bar">
+        <button class="nav-item active" onclick="switchTab('info', this)">📖</button>
+        <button class="nav-item" onclick="switchTab('shop', this)">🛒</button>
+        <button class="nav-item" onclick="switchTab('profile', this)">👤</button>
+    </div>
+
+    <script>
+        function switchTab(tabName, btn) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            
+            document.getElementById(tabName + '-section').classList.add('active');
+            btn.classList.add('active');
+        }
+
+        function makeOrder(product, price) {
+            let inputId = product.includes('Nitro') ? 'discord-nitro' : 'discord-tg';
+            let discordUser = document.getElementById(inputId).value;
+
+            if(!discordUser) {
+                alert('Пожалуйста, введите ваш Discord аккаунт!');
+                return;
+            }
+
+            fetch('/api/order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ discord: discordUser, product: product, price: price })
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert('Заказ успешно оформлен! Чек отправлен администраторам.');
+                document.getElementById('status-text').innerText = 'Последний заказ: ' + product + ' (' + price + ')';
+            })
+            .catch(err => alert('Ошибка при оформлении заказа.'));
+        }
+    </script>
+</body>
+</html>

@@ -5,119 +5,460 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Art Shop — Web App</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: #0c0a1d; color: #ffffff; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding-bottom: 90px; }
-        
-        /* Шапка шопа */
-        .header { width: 100%; max-width: 480px; padding: 20px; text-align: center; background: linear-gradient(135deg, #1e1b4b, #311042); border-bottom-left-radius: 24px; border-bottom-right-radius: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
-        .shop-avatar { width: 80px; height: 80px; border-radius: 50%; border: 3px solid #8b5cf6; margin-bottom: 10px; object-fit: cover; }
-        .shop-title { font-size: 22px; font-weight: bold; letter-spacing: 1px; }
+        :root {
+            --primary: #8b5cf6;
+            --bg-dark: #050509;
+            --card-bg: linear-gradient(135deg, #1e1b4b 0%, #0c0a1d 100%);
+            --text-light: #ffffff;
+            --text-muted: #cbd5e1;
+        }
 
-        /* Контент страницы */
-        .container { width: 100%; max-width: 480px; padding: 20px; }
-        .section { display: none; }
-        .section.active { display: block; }
+        html, body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
 
-        /* Карточки товаров */
-        .card { background: #131129; border: 1px solid #2e265c; border-radius: 16px; padding: 20px; margin-bottom: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.3); transition: 0.3s; }
-        .card:hover { border-color: #8b5cf6; transform: translateY(-3px); }
-        .card h3 { font-size: 18px; color: #a78bfa; margin-bottom: 8px; }
-        .card p { font-size: 14px; color: #9ca3af; margin-bottom: 12px; }
-        .price { font-size: 20px; font-weight: bold; color: #fff; margin-bottom: 12px; }
-        
-        input, select { width: 100%; padding: 12px; margin-bottom: 12px; background: #0a0814; border: 1px solid #3b3075; border-radius: 8px; color: #fff; outline: none; }
-        button.buy-btn { width: 100%; padding: 12px; background: linear-gradient(135deg, #7c3aed, #4f46e5); border: none; border-radius: 8px; color: #fff; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        button.buy-btn:hover { opacity: 0.9; }
+        .container {
+            width: 90%;
+            max-width: 450px;
+            margin-top: 20px;
+            margin-bottom: 40px;
+        }
 
-        /* Нижняя панель навигации (как на скриншоте) */
-        .nav-bar { position: fixed; bottom: 20px; background: rgba(26, 22, 53, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 24px; padding: 10px 20px; display: flex; gap: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); z-index: 1000; }
-        .nav-item { background: none; border: none; color: #9ca3af; font-size: 20px; cursor: pointer; transition: 0.2s; padding: 8px; border-radius: 12px; }
-        .nav-item.active, .nav-item:hover { color: #fff; background: rgba(139, 92, 246, 0.2); }
+        .header, .card, .profile-box {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 20px;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            margin-bottom: 20px;
+            box-sizing: border-box;
+        }
+
+        .shop-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 3px solid var(--primary);
+            object-fit: cover;
+            margin-bottom: 10px;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0 15px 0;
+            background: #000;
+            border: 1px solid var(--primary);
+            border-radius: 10px;
+            color: white;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #7c3aed;
+        }
+
+        /* ОРИГИНАЛЬНЫЕ СТИЛИ БИЛЕТА UIVERSE */
+        .ticket-canvas {
+            display: none; /* Скрыт до заказа */
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .ticket-wrapper {
+            --t-bg: #1e1e24;
+            --t-bg-light: #2b2b36;
+            --t-accent: #7c3aed;
+            --t-accent-glow: rgba(124, 58, 237, 0.5);
+            --t-text-main: #f8fafc;
+            --t-text-muted: #94a3b8;
+            font-size: 10px;
+            perspective: 1000px;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .ticket {
+            position: relative;
+            width: 100%;
+            max-width: 380px;
+            margin: 0 auto;
+            color: var(--t-text-main);
+            font-family: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.6s ease;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05);
+            background: transparent;
+            filter: drop-shadow(0px 0px 10px rgba(0, 0, 0, 0.5));
+            box-sizing: border-box;
+        }
+
+        .ticket-wrapper:hover .ticket {
+            transform: rotateX(5deg) rotateY(-10deg) scale(1.02);
+            box-shadow: 20px 20px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1), -5px -5px 20px var(--t-accent-glow);
+        }
+
+        .ticket::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: 1em;
+            pointer-events: none;
+            background: linear-gradient(115deg, transparent 0%, transparent 40%, rgba(255, 255, 255, 0.1) 45%, rgba(255, 255, 255, 0.3) 50%, rgba(255, 255, 255, 0.1) 55%, transparent 60%, transparent 100%);
+            z-index: 10;
+            background-size: 250% 250%;
+            background-position: 100% 100%;
+            transition: background-position 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+            mix-blend-mode: overlay;
+        }
+
+        .ticket-wrapper:hover .ticket::after {
+            background-position: 0% 0%;
+        }
+
+        .t-main {
+            padding: 2em;
+            position: relative;
+            overflow: hidden;
+            background: radial-gradient(circle at bottom left, transparent 1em, var(--t-bg) 1.05em), radial-gradient(circle at bottom right, transparent 1em, var(--t-bg) 1.05em);
+            background-size: 51% 100%;
+            background-position: bottom left, bottom right;
+            background-repeat: no-repeat;
+            border-top-left-radius: 1em;
+            border-top-right-radius: 1em;
+        }
+
+        .t-main::after {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: linear-gradient(rgba(124, 58, 237, 0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(124, 58, 237, 0.15) 1px, transparent 1px);
+            background-size: 2em 2em;
+            opacity: 0.6;
+            z-index: 0;
+            pointer-events: none;
+            transform: perspective(500px) rotateX(20deg) scale(1.5);
+            animation: grid-scroll 20s linear infinite;
+        }
+
+        @keyframes grid-scroll {
+            0% { background-position: 0 0; }
+            100% { background-position: 0 4em; }
+        }
+
+        .t-content { position: relative; z-index: 1; }
+
+        .t-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 2em;
+        }
+
+        .t-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5em;
+            font-weight: 900;
+            font-size: 1.2em;
+            letter-spacing: -0.05em;
+            color: #fff;
+        }
+
+        .t-logo svg {
+            width: 1.5em;
+            height: 1.5em;
+            fill: var(--t-accent);
+            filter: drop-shadow(0 0 5px var(--t-accent));
+        }
+
+        .t-type {
+            font-size: 0.6em;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            color: var(--t-accent);
+            border: 1px solid var(--t-accent);
+            padding: 0.4em 0.8em;
+            border-radius: 99em;
+            font-weight: 700;
+        }
+
+        .t-title {
+            font-size: 2.2em;
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 0.2em;
+            text-transform: uppercase;
+            background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .t-subtitle {
+            color: var(--t-text-muted);
+            font-size: 0.9em;
+            margin-bottom: 2.5em;
+        }
+
+        .t-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5em;
+            margin-bottom: 1em;
+        }
+
+        .t-detail-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2em;
+        }
+
+        .t-label {
+            font-size: 0.6em;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--t-text-muted);
+        }
+
+        .t-value {
+            font-size: 1.1em;
+            font-weight: 700;
+            color: var(--t-text-main);
+        }
+
+        .t-perforation {
+            display: flex;
+            justify-content: space-between;
+            height: 1em;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .t-perf-line {
+            flex-grow: 1;
+            height: 0;
+            border-top: 2px dashed rgba(255, 255, 255, 0.2);
+            margin: 0 1.5em;
+        }
+
+        .t-stub {
+            padding: 2em;
+            background: radial-gradient(circle at top left, transparent 1em, var(--t-bg-light) 1.05em), radial-gradient(circle at top right, transparent 1em, var(--t-bg-light) 1.05em);
+            background-size: 51% 100%;
+            background-position: top left, top right;
+            background-repeat: no-repeat;
+            border-bottom-left-radius: 1em;
+            border-bottom-right-radius: 1em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+        }
+
+        .t-barcode-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5em;
+        }
+
+        .t-barcode {
+            width: 10em;
+            height: 3em;
+            background: repeating-linear-gradient(90deg, #fff 0, #fff 2px, transparent 2px, transparent 4px, #fff 4px, #fff 5px, transparent 5px, transparent 8px, #fff 8px, #fff 12px, transparent 12px, transparent 15px, #fff 15px, #fff 16px, transparent 16px, transparent 18px);
+            opacity: 0.8;
+        }
+
+        .t-barcode-id {
+            font-family: monospace;
+            font-size: 0.7em;
+            color: var(--t-text-muted);
+            letter-spacing: 0.2em;
+        }
+
+        .t-admit {
+            text-align: right;
+        }
+
+        .t-admit-text {
+            font-size: 0.7em;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--t-text-muted);
+        }
+
+        .t-admit-num {
+            font-size: 2.5em;
+            font-weight: 900;
+            line-height: 1;
+            color: var(--t-accent);
+            text-shadow: 0 0 15px var(--t-accent-glow);
+        }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150" class="shop-avatar" alt="Logo">
-        <div class="shop-title">ART SHOP</div>
-    </div>
-
     <div class="container">
-        <!-- Секция 1: Информация о шопе (Тетрадь) -->
-        <div id="info-section" class="section active">
-            <div class="card">
-                <h3>📖 О нашем магазине</h3>
-                <p>Добро пожаловать в Art Shop! Мы предоставляем быстрый и надежный доступ к популярным цифровым сервисам. Работаем круглосуточно и без сбоев.</p>
-                <p>💬 Поддержка: <b>@admin_support</b></p>
-            </div>
+        <div class="header" style="text-align: center;">
+            <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150" alt="Avatar" class="shop-avatar">
+            <h2>ART SHOP</h2>
         </div>
 
-        <!-- Секция 2: Каталог товаров (Тележка) -->
-        <div id="shop-section" class="section">
-            <div class="card">
-                <h3>💬 Nitro Full</h3>
-                <p>Официальная подписка Discord Nitro на ваш аккаунт.</p>
-                <div class="price">200$</div>
-                <input type="text" id="discord-nitro" placeholder="Ваш Discord (например: user#0000)">
-                <button class="buy-btn" onclick="makeOrder('Nitro Full', '200$')">Заказать</button>
-            </div>
-            
-            <div class="card">
-                <h3>✈️ Telegram Premium</h3>
-                <p>Премиум подписка Telegram сроком на 1 месяц / год.</p>
-                <div class="price">150$</div>
-                <input type="text" id="discord-tg" placeholder="Ваш Discord (например: user#0000)">
-                <button class="buy-btn" onclick="makeOrder('Telegram Premium', '150$')">Заказать</button>
-            </div>
+        <div class="profile-box">
+            <h3>👤 Профиль</h3>
+            <img id="displayAvatar" src="https://via.placeholder.com/80" style="width:60px; height:60px; border-radius:50%; display:block; margin-bottom:10px; object-fit: cover;">
+            <p><strong>Ник:</strong> <span id="displayUsername">User</span></p>
+            <p><strong>О себе:</strong> <span id="displayBio">...</span></p>
+            <hr style="border:0; border-top:1px solid #444; margin: 15px 0;">
+            <input type="text" id="inputUsername" placeholder="Ник">
+            <input type="text" id="inputAvatar" placeholder="URL аватарки">
+            <textarea id="inputBio" placeholder="О себе"></textarea>
+            <button onclick="saveProfile()">Сохранить профиль</button>
         </div>
 
-        <!-- Секция 3: Профиль -->
-        <div id="profile-section" class="section">
-            <div class="card">
-                <h3>👤 Профиль пользователя</h3>
-                <p>Здесь отображается статус вашего подключения и последние действия.</p>
-                <p style="margin-top: 10px; color: #a78bfa;" id="status-text">Статус: Готов к заказу</p>
+        <div class="card">
+            <h3>💬 Nitro Full</h3>
+            <p>Официальная подписка Discord Nitro.</p>
+            <p style="font-size: 20px; font-weight: bold;">200$</p>
+            <button onclick="makeOrder('Nitro Full', '200$', 'inputUsername')">Заказать</button>
+        </div>
+
+        <!-- Билет в стиле Uiverse -->
+        <div class="ticket-canvas" id="receiptBox">
+            <div class="ticket-wrapper">
+                <div class="ticket">
+                    <div class="t-main">
+                        <div class="t-content">
+                            <div class="t-header">
+                                <div class="t-logo">
+                                    <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
+                                    ART SHOP
+                                </div>
+                                <div class="t-type">DEV PASS</div>
+                            </div>
+                            <div class="t-title" id="recProduct">Nitro Full</div>
+                            <div class="t-subtitle">Digital Verified Order</div>
+                            <div class="t-details">
+                                <div class="t-detail-item">
+                                    <span class="t-label">Покупатель</span>
+                                    <span class="t-value" id="recDiscord">User</span>
+                                </div>
+                                <div class="t-detail-item">
+                                    <span class="t-label">Стоимость</span>
+                                    <span class="t-value" id="recPrice">200$</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="t-perforation">
+                        <div class="t-perf-line"></div>
+                    </div>
+                    <div class="t-stub">
+                        <div class="t-barcode-container">
+                            <div class="t-barcode"></div>
+                            <div class="t-barcode-id">UI-77-9X04-ART</div>
+                        </div>
+                        <div class="t-admit">
+                            <div class="t-admit-text">ID сессии</div>
+                            <div class="t-admit-num">42</div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-
-    <!-- Нижняя панель с иконками -->
-    <div class="nav-bar">
-        <button class="nav-item active" onclick="switchTab('info', this)">📖</button>
-        <button class="nav-item" onclick="switchTab('shop', this)">🛒</button>
-        <button class="nav-item" onclick="switchTab('profile', this)">👤</button>
     </div>
 
     <script>
-        function switchTab(tabName, btn) {
-            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+    function saveProfile() {
+        const u = document.getElementById('inputUsername').value;
+        const a = document.getElementById('inputAvatar').value;
+        const b = document.getElementById('inputBio').value;
+        
+        localStorage.setItem('u', u); 
+        localStorage.setItem('a', a); 
+        localStorage.setItem('b', b);
+        
+        document.getElementById('displayUsername').innerText = u || 'User';
+        if(a) document.getElementById('displayAvatar').src = a;
+        document.getElementById('displayBio').innerText = b || '...';
+        
+        alert('Профиль сохранен!');
+    }
+
+    // Универсальная функция заказа для любых карточек
+    async function makeOrder(prod, price, inputId) {
+        // Берем ник либо из поля ввода карточки, либо из профиля
+        let user = '';
+        if (inputId) {
+            user = document.getElementById(inputId).value;
+        }
+        if (!user || user.trim() === '') {
+            user = document.getElementById('displayUsername').innerText;
+        }
+        if (!user || user === 'User') {
+            user = 'Аноним';
+        }
+
+        const res = await fetch('/api/order', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({product: prod, price: price, discord: user})
+        });
+        
+        const data = await res.json();
+        if(data.status === 'success') {
+            document.getElementById('recProduct').innerText = prod;
+            document.getElementById('recDiscord').innerText = user;
+            document.getElementById('recPrice').innerText = price;
+            document.getElementById('receiptBox').style.display = 'flex';
+            // Плавная прокрутка к чеку
+            document.getElementById('receiptBox').scrollIntoView({ behavior: 'smooth' });
+        } else {
+            alert('Ошибка при оформлении заказа');
+        }
+    }
+
+    window.onload = () => {
+        if(localStorage.getItem('u')) {
+            const u = localStorage.getItem('u');
+            const a = localStorage.getItem('a');
+            const b = localStorage.getItem('b');
             
-            document.getElementById(tabName + '-section').classList.add('active');
-            btn.classList.add('active');
-        }
-
-        function makeOrder(product, price) {
-            let inputId = product.includes('Nitro') ? 'discord-nitro' : 'discord-tg';
-            let discordUser = document.getElementById(inputId).value;
-
-            if(!discordUser) {
-                alert('Пожалуйста, введите ваш Discord аккаунт!');
-                return;
+            document.getElementById('displayUsername').innerText = u;
+            document.getElementById('inputUsername').value = u;
+            
+            if(a) {
+                document.getElementById('displayAvatar').src = a;
+                document.getElementById('inputAvatar').value = a;
             }
-
-            fetch('/api/order', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ discord: discordUser, product: product, price: price })
-            })
-            .then(res => res.json())
-            .then(data => {
-                alert('Заказ успешно оформлен! Чек отправлен администраторам.');
-                document.getElementById('status-text').innerText = 'Последний заказ: ' + product + ' (' + price + ')';
-            })
-            .catch(err => alert('Ошибка при оформлении заказа.'));
+            if(b) {
+                document.getElementById('displayBio').innerText = b;
+                document.getElementById('inputBio').value = b;
+            }
         }
-    </script>
+    }
+</script>
 </body>
 </html>

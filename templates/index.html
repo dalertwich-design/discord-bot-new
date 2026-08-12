@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Art Shop — Store</title>
+    <title>Art Shop — App</title>
     <style>
         :root {
             --primary: #7c3aed;
@@ -16,128 +16,357 @@
         body {
             margin: 0;
             padding: 0;
-            font-family: 'Segoe UI', sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--bg-dark);
             color: var(--text-light);
             display: flex;
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
-            padding-bottom: 100px; /* Отступ для панели */
+            padding-bottom: 110px;
         }
 
-        /* Панель навигации (Dock) */
+        /* Модальное окно регистрации (обязательное при первом входе) */
+        #authModal {
+            position: fixed;
+            inset: 0;
+            background: rgba(5, 5, 9, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 20px;
+        }
+
+        .auth-card {
+            background: var(--card-bg);
+            border: 1px solid rgba(124, 58, 237, 0.4);
+            padding: 30px;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 380px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            text-align: center;
+        }
+
+        .auth-card h2 { margin-top: 0; color: #fff; }
+        .auth-card input, .auth-card textarea {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0 15px 0;
+            background: #050509;
+            border: 1px solid var(--primary);
+            border-radius: 10px;
+            color: white;
+            box-sizing: border-box;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 450px;
+            margin-top: 20px;
+        }
+
+        /* Управление вкладками (экранами) */
+        .page-section {
+            display: none;
+            width: 100%;
+        }
+        .page-section.active {
+            display: block;
+        }
+
+        /* Стиль профиля */
+        .discord-profile {
+            background: #111018;
+            border-radius: 20px;
+            border: 1px solid rgba(124, 58, 237, 0.3);
+            overflow: hidden;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+        }
+        .profile-banner { height: 90px; background: linear-gradient(135deg, #7c3aed, #3b82f6); }
+        .profile-body { padding: 0 20px 20px 20px; position: relative; }
+        .profile-avatar { width: 80px; height: 80px; border-radius: 50%; border: 4px solid #111018; object-fit: cover; margin-top: -45px; margin-bottom: 12px; background: #222; }
+        .profile-name { font-size: 20px; font-weight: 800; color: #fff; margin-bottom: 2px; }
+        .profile-tag { font-size: 13px; color: var(--text-muted); margin-bottom: 12px; }
+        .profile-bio { font-size: 13px; color: #d1d5db; background: rgba(255,255,255,0.03); padding: 10px; border-radius: 10px; border-left: 3px solid var(--primary); margin-bottom: 15px; }
+
+        /* Карточки товаров */
+        .card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 20px;
+            border: 1px solid rgba(124, 58, 237, 0.3);
+            margin-bottom: 20px;
+            box-sizing: border-box;
+        }
+        .card h3 { margin-top: 0; margin-bottom: 8px; color: #fff; }
+        .product-features { font-size: 13px; color: var(--text-muted); margin: 10px 0 15px 0; padding-left: 15px; }
+        .product-features li { margin-bottom: 4px; }
+        .price-tag { font-size: 22px; font-weight: 900; color: #3b82f6; margin-bottom: 15px; }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover { background: #6d28d9; }
+
+        /* Чек на весь экран */
+        #receiptBox {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 14, 23, 0.95);
+            z-index: 3000;
+            padding: 20px;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        /* Нижняя панель навигации (Dock) */
         .dock {
             position: fixed;
             bottom: 20px;
-            background: rgba(15, 14, 23, 0.8);
-            backdrop-filter: blur(10px);
-            padding: 10px;
+            background: rgba(20, 19, 30, 0.85);
+            backdrop-filter: blur(12px);
+            padding: 8px 12px;
             border-radius: 20px;
             display: flex;
-            gap: 10px;
-            border: 1px solid rgba(255,255,255,0.1);
-            z-index: 999;
+            gap: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            z-index: 1000;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
         .dock-btn {
             background: transparent;
-            border: 1px solid rgba(255,255,255,0.1);
-            padding: 12px;
+            border: 1px solid transparent;
+            width: 45px;
+            height: 45px;
             border-radius: 12px;
             cursor: pointer;
             color: #fff;
-            transition: 0.3s;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
         }
-        .dock-btn:hover { background: var(--primary); border-color: var(--primary); }
-
-        /* Остальные стили (оставляем как были) */
-        .container { width: 90%; max-width: 450px; margin-top: 20px; }
-        .discord-profile { background: #111018; border-radius: 20px; border: 1px solid rgba(124, 58, 237, 0.3); margin-bottom: 25px; }
-        .profile-banner { height: 90px; background: linear-gradient(135deg, #7c3aed, #3b82f6); border-radius: 20px 20px 0 0; }
-        .profile-body { padding: 0 20px 20px 20px; }
-        .profile-avatar { width: 80px; height: 80px; border-radius: 50%; border: 4px solid #111018; margin-top: -45px; margin-bottom: 12px; object-fit: cover; }
-        .card { background: var(--card-bg); padding: 20px; border-radius: 20px; margin-bottom: 20px; }
-        button { width: 100%; padding: 12px; background: var(--primary); border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer; }
-        #receiptBox { display: none; margin-top: 20px; padding: 20px; background: #161522; border-radius: 20px; }
-        #authModal { position: fixed; inset: 0; background: rgba(5, 5, 9, 0.9); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-        .auth-card { background: var(--card-bg); padding: 30px; border-radius: 20px; width: 90%; max-width: 380px; }
-        input, textarea { width: 100%; padding: 12px; margin: 8px 0 15px 0; background: #050509; border: 1px solid var(--primary); border-radius: 10px; color: white; box-sizing: border-box; }
+        .dock-btn:hover { background: rgba(124, 58, 237, 0.2); border-color: rgba(124, 58, 237, 0.4); }
+        .dock-btn.active { background: var(--primary); border-color: var(--primary); }
     </style>
 </head>
 <body>
 
-    <!-- ПАНЕЛЬ НАВИГАЦИИ -->
-    <div class="dock">
-        <button class="dock-btn" onclick="location.reload()">🏠</button>
-        <button class="dock-btn" onclick="alert('Поиск в разработке')">🔍</button>
-        <button class="dock-btn" onclick="alert('Почта пуста')">✉️</button>
-        <button class="dock-btn" onclick="alert('Галерея')">📷</button>
-        <button class="dock-btn" onclick="alert('Избранное')">⭐</button>
-        <button class="dock-btn" onclick="document.querySelector('.discord-profile').scrollIntoView({behavior:'smooth'})">👤</button>
-        <button class="dock-btn" onclick="alert('Настройки')">⚙️</button>
-    </div>
-
-    <!-- ОСТАЛЬНОЙ КОНТЕНТ -->
-    <div id="authModal">
+    <!-- МОДАЛЬНОЕ ОКНО РЕГИСТРАЦИИ (ПЕРВЫЙ ВХОД) -->
+    <div id="authModal" style="display: none;">
         <div class="auth-card">
             <h2>Регистрация</h2>
-            <input type="text" id="regUsername" placeholder="Никнейм">
-            <input type="text" id="regAvatar" placeholder="URL Аватарки">
-            <textarea id="regBio" placeholder="Статус"></textarea>
-            <button onclick="registerUser()">Войти</button>
+            <p style="font-size: 13px; color: var(--text-muted);">Создайте профиль для доступа к магазину</p>
+            <input type="text" id="regUsername" placeholder="Ваш никнэйм">
+            <input type="text" id="regAvatar" placeholder="Ссылка на аватарку (URL)">
+            <textarea id="regBio" placeholder="Статус / О себе" rows="2"></textarea>
+            <button onclick="registerUser()">Зарегистрироваться</button>
+        </div>
+    </div>
+
+    <!-- ЧЕК ЗАКАЗА (ПОЯВЛЯЕТСЯ ПОВЕРХ ВСЕГО) -->
+    <div id="receiptBox">
+        <div style="background: var(--card-bg); padding: 30px; border-radius: 20px; border: 1px solid var(--primary); width: 100%; max-width: 320px; box-sizing: border-box;">
+            <h3 style="color: #4ade80; margin-top:0;">🧾 Чек заказа</h3>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 5px;">Товар:</p>
+            <b id="recProduct" style="color:#fff; font-size: 16px;"></b>
+            <p style="font-size: 13px; color: var(--text-muted); margin: 10px 0 5px 0;">Сумма:</p>
+            <b id="recPrice" style="color:#3b82f6; font-size: 18px;"></b>
+            <p style="font-size: 13px; color: var(--text-muted); margin: 10px 0 5px 0;">Покупатель:</p>
+            <b id="recUser" style="color:#fff; font-size: 14px;"></b>
+            <button style="background: #ef4444; margin-top: 20px;" onclick="closeReceipt()">Закрыть чек</button>
         </div>
     </div>
 
     <div class="container">
-        <div class="discord-profile">
-            <div class="profile-banner"></div>
-            <div class="profile-body">
-                <img id="viewAvatar" src="" class="profile-avatar">
-                <h2 id="viewUsername">User</h2>
-                <p id="viewBio" style="font-size: 13px; color: var(--text-muted);">...</p>
-                <button onclick="openEditProfile()">Редактировать профиль</button>
+
+        <!-- 1. ГЛАВНАЯ СТРАНИЦА -->
+        <div id="section-home" class="page-section active">
+            <div class="card" style="text-align: center; padding: 30px 20px;">
+                <h2>Добро пожаловать в Art Shop! 🌟</h2>
+                <p style="color: var(--text-muted); font-size: 14px;">Лучший магазин цифровых товаров и подписок.</p>
+                <button onclick="switchTab('shop', document.querySelectorAll('.dock-btn')[1])" style="margin-top: 15px;">Перейти к товарам 🛒</button>
             </div>
         </div>
 
-        <div class="card">
-            <h3>💬 Discord Nitro Full</h3>
-            <p>Премиум подписка.</p>
-            <button onclick="makeOrder('Nitro Full', '200$')">Заказать товар</button>
+        <!-- 2. РАЗДЕЛ ТОВАРОВ (МАГАЗИН) -->
+        <div id="section-shop" class="page-section">
+            <h2 style="margin-bottom: 15px;">🛒 Каталог товаров</h2>
+            
+            <div class="card">
+                <h3>💬 Discord Nitro Full</h3>
+                <p style="font-size: 13px; color: var(--text-muted);">Официальная подписка Discord.</p>
+                <ul class="product-features">
+                    <li>✨ Анимированные аватары</li>
+                    <li>🚀 2 буста сервера</li>
+                </ul>
+                <div class="price-tag">200$</div>
+                <button onclick="makeOrder('Discord Nitro Full', '200$')">Оформить заказ</button>
+            </div>
+
+            <div class="card">
+                <h3>✈️ Telegram Premium</h3>
+                <p style="font-size: 13px; color: var(--text-muted);">Премиум статус в Telegram.</p>
+                <ul class="product-features">
+                    <li>⭐ Увеличенные лимиты</li>
+                    <li>🎤 Расшифровка голоса</li>
+                </ul>
+                <div class="price-tag">150$</div>
+                <button onclick="makeOrder('Telegram Premium', '150$')">Оформить заказ</button>
+            </div>
         </div>
+
+        <!-- 3. ПРОФИЛЬ -->
+        <div id="section-profile" class="page-section">
+            <div class="discord-profile">
+                <div class="profile-banner"></div>
+                <div class="profile-body">
+                    <img id="viewAvatar" src="" alt="Avatar" class="profile-avatar">
+                    <div class="profile-name" id="viewUsername">User</div>
+                    <div class="profile-tag" id="viewTag">@user • Клиент</div>
+                    <div class="profile-bio" id="viewBio">Статус не указан</div>
+                    <button onclick="openEditProfile()">Редактировать профиль</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. НАСТРОЙКИ -->
+        <div id="section-settings" class="page-section">
+            <div class="card">
+                <h3>⚙️ Настройки</h3>
+                <p style="font-size: 13px; color: var(--text-muted);">Управление аккаунтом</p>
+                <button style="background: #ef4444; margin-top: 15px;" onclick="logout()">Выйти из аккаунта</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- НИЖНЯЯ ПАНЕЛЬ НАВИГАЦИИ (DOCK) -->
+    <div class="dock">
+        <button class="dock-btn active" onclick="switchTab('home', this)" title="Главная">🏠</button>
+        <button class="dock-btn" onclick="switchTab('shop', this)" title="Магазин">🛒</button>
+        <button class="dock-btn" onclick="switchTab('profile', this)" title="Профиль">👤</button>
+        <button class="dock-btn" onclick="switchTab('settings', this)" title="Настройки">⚙️</button>
     </div>
 
     <script>
-        function registerUser() {
-            const u = document.getElementById('regUsername').value;
-            localStorage.setItem('art_user', u);
-            localStorage.setItem('art_avatar', document.getElementById('regAvatar').value);
-            localStorage.setItem('art_bio', document.getElementById('regBio').value);
-            location.reload();
-        }
-
-        function loadProfile() {
-            const u = localStorage.getItem('art_user');
-            if (u) {
-                document.getElementById('authModal').style.display = 'none';
-                document.getElementById('viewUsername').innerText = u;
-                document.getElementById('viewAvatar').src = localStorage.getItem('art_avatar');
-                document.getElementById('viewBio').innerText = localStorage.getItem('art_bio');
+        // Проверка при загрузке: если нет пользователя, показываем модалку регистрации
+        window.onload = () => {
+            const savedUser = localStorage.getItem('art_user');
+            if (!savedUser) {
+                document.getElementById('authModal').style.display = 'flex';
+            } else {
+                loadProfileData();
             }
         }
 
-        function openEditProfile() { document.getElementById('authModal').style.display = 'flex'; }
-        
-        async function makeOrder(prod, price) {
-            const res = await fetch('/api/order', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({product: prod, price: price, discord: localStorage.getItem('art_user')})
-            });
-            alert('Заказ оформлен!');
+        // Регистрация
+        function registerUser() {
+            const username = document.getElementById('regUsername').value.trim();
+            const avatar = document.getElementById('regAvatar').value.trim();
+            const bio = document.getElementById('regBio').value.trim();
+
+            if (!username) {
+                alert('Введите никнейм!');
+                return;
+            }
+
+            localStorage.setItem('art_user', username);
+            localStorage.setItem('art_avatar', avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150');
+            localStorage.setItem('art_bio', bio || 'Статус не указан');
+
+            document.getElementById('authModal').style.display = 'none';
+            loadProfileData();
         }
 
-        loadProfile();
+        // Загрузка данных профиля
+        function loadProfileData() {
+            const user = localStorage.getItem('art_user') || 'User';
+            const avatar = localStorage.getItem('art_avatar') || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150';
+            const bio = localStorage.getItem('art_bio') || '...';
+
+            document.getElementById('viewUsername').innerText = user;
+            document.getElementById('viewTag').innerText = '@' + user.toLowerCase() + ' • Клиент';
+            document.getElementById('viewAvatar').src = avatar;
+            document.getElementById('viewBio').innerText = bio;
+        }
+
+        // Переключение между вкладками (экранами)
+        function switchTab(tabId, btnElement) {
+            document.querySelectorAll('.page-section').forEach(sec => {
+                sec.classList.remove('active');
+            });
+            document.getElementById('section-' + tabId).classList.add('active');
+
+            document.querySelectorAll('.dock-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            if (btnElement) btnElement.classList.add('active');
+        }
+
+        function openEditProfile() {
+            document.getElementById('regUsername').value = localStorage.getItem('art_user') || '';
+            document.getElementById('regAvatar').value = localStorage.getItem('art_avatar') || '';
+            document.getElementById('regBio').value = localStorage.getItem('art_bio') || '';
+            document.getElementById('authModal').style.display = 'flex';
+        }
+
+        function logout() {
+            localStorage.clear();
+            location.reload();
+        }
+
+        // Оформление заказа
+        async function makeOrder(productName, productPrice) {
+            const user = localStorage.getItem('art_user');
+            if (!user) {
+                document.getElementById('authModal').style.display = 'flex';
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/order', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ product: productName, price: productPrice, discord: user })
+                });
+
+                const data = await res.json();
+                if (data.status === 'success') {
+                    document.getElementById('recProduct').innerText = productName;
+                    document.getElementById('recPrice').innerText = productPrice;
+                    document.getElementById('recUser').innerText = user;
+                    
+                    // Показываем чек на весь экран
+                    document.getElementById('receiptBox').style.display = 'flex';
+                } else {
+                    alert('Ошибка сервера.');
+                }
+            } catch (err) {
+                alert('Ошибка соединения.');
+            }
+        }
+
+        // Закрытие чека
+        function closeReceipt() {
+            document.getElementById('receiptBox').style.display = 'none';
+        }
     </script>
 </body>
-</html
+</html>

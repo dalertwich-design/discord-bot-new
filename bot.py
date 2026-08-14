@@ -57,10 +57,6 @@ class InfoView(View):
     async def products_button(self, interaction: discord.Interaction, button: Button):
         await interaction.response.send_message("Выберите категорию товаров:", view=CategorySelectView(), ephemeral=True)
 
-    @discord.ui.button(label="Отзывы", style=discord.ButtonStyle.blurple, custom_id="btn_reviews")
-    async def reviews_button(self, interaction: discord.Interaction, button: Button):
-        await interaction.response.send_message("⭐ Почитать отзывы можно в специальном канале!", ephemeral=True)
-
     @discord.ui.button(label="Админ", style=discord.ButtonStyle.secondary, custom_id="btn_admin")
     async def admin_button(self, interaction: discord.Interaction, button: Button):
         await create_ticket(interaction, "Обращение к администрации")
@@ -143,6 +139,16 @@ async def info_command(ctx):
         color=discord.Color.gold()
     )
     await ctx.send(embed=embed, view=InfoView())
+
+@bot.command(name="review", aliases=["отзывы"])
+async def review_command(ctx):
+    embed = discord.Embed(
+        title="⭐ Отзывы о магазине Art Shop",
+        description="Вы можете почитать отзывы наших клиентов или оставить свой в специальном канале!",
+        color=discord.Color.purple()
+    )
+    embed.add_field(name="Канал с отзывами", value="Перейдите в канал **#отзывы** на нашем сервере.", inline=False)
+    await ctx.send(embed=embed)
 
 @bot.event
 async def on_ready():

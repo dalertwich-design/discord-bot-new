@@ -13,6 +13,10 @@ app = Flask(__name__, template_folder='templates')
 def home():
     return render_template('index.html')
 
+@app.route('/reviews')
+def reviews_page():
+    return render_template('reviews.html')
+
 @app.route('/api/order', methods=['POST'])
 def api_order():
     try:
@@ -149,7 +153,6 @@ async def review_command(ctx):
     )
     
     view = View()
-    # Замените ссылку ниже на адрес вашего приложения на Railway и добавьте /reviews в конце
     view.add_item(Button(label="Смотреть отзывы на сайте", style=discord.ButtonStyle.link, url="https://discord-bot-new-production.up.railway.app/reviews"))
     
     await ctx.send(embed=embed, view=view)
@@ -161,9 +164,6 @@ async def on_ready():
 def run_flask():
     port = int(os.environ.get("PORT", 8080))
     app.run(host='0.0.0.0', port=port)
-    @app.route('/reviews')
-def reviews_page():
-    return render_template('reviews.html')
 
 Thread(target=run_flask).start()
 bot.run(os.environ.get("DISCORD_TOKEN"))

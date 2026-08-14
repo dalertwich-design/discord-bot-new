@@ -1,6 +1,6 @@
 import os
 import asyncio
-from datetime import datetime
+from datetime import datetime, timedelta
 import discord
 from discord.ext import commands
 from discord.ui import View, Button, Select
@@ -19,6 +19,9 @@ REVIEWS_LIST = [
     {"username": "@user123", "text": "Быстрая поддержка и честные цены. Буду брать еще."}
 ]
 
+# Словарь для защиты от спама по IP: {ip_address: datetime}
+USER_COOLDOWNS = {}
+
 @app.route('/reviews')
 def reviews_page():
     return render_template('reviews.html', reviews=REVIEWS_LIST)
@@ -27,8 +30,30 @@ def reviews_page():
 def add_review():
     username = request.form.get('username')
     text = request.form.get('text')
-    if username and text:
-        REVIEWS_LIST.insert(0, {"username": username, "text": text})
+    
+    if not username or not text:
+        return reviews_page()
+    
+    # Проверка длины текста (от 3 до 500 символов)
+    if len(text) < 3 or len(text) > 500:
+        return "<h3>❌ Ошибка: Отзыв должен быть от 3 до 500 символов.</h3><a href='/reviews'>Назад к отзывам</a>", 400
+
+    # Получаем IP-адрес пользователя для защиты от спама
+    user_ip = request.remote_addr
+    now = datetime.now()
+
+    # Проверка лимита: 1 отзыв в сутки
+    if user_ip in USER_COOLDOWNS:
+        last_time = USER_COOLDOWNS[user_ip]
+        if now - last_time < timedelta(days=1):
+            timeLeft = timedelta(days=1) - (now - last_time)
+            hours_left = int(timeLeft.total_seconds() // 3600)
+            return f"<h3>⏳ Вы уже оставили отзыв. Следующий отзыв можно будет написать через {hours_left} ч.</h3><a href='/reviews'>Назад к отзывам</a>", 429
+
+    # Сохраняем время отправки и добавляем отзыв
+    USER_COOLDOWNS[user_ip] = now
+    REVIEWS_LIST.insert(0, {"username": username, "text": text})
+    
     return reviews_page()
 
 @app.route('/api/order', methods=['POST'])

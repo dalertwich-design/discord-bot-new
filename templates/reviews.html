@@ -4,39 +4,101 @@
     <meta charset="UTF-8">
     <title>Отзывы — Art Shop</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #0f172a; color: #fff; padding: 40px; text-align: center; }
-        .review-card { background: #1e293b; padding: 20px; margin: 15px auto; max-width: 600px; border-radius: 10px; text-align: left; }
-        h1 { color: #a855f7; }
-        .form-box { background: #1e293b; padding: 20px; margin: 30px auto; max-width: 600px; border-radius: 10px; text-align: left; }
-        input, textarea { width: 100%; padding: 10px; margin: 8px 0; background: #0f172a; border: 1px solid #334155; color: #fff; border-radius: 5px; box-sizing: border-box; }
-        button { background: #9333ea; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        button:hover { background: #7e22ce; }
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            color: #c084fc;
+            margin-bottom: 10px;
+        }
+        p.desc {
+            color: #94a3b8;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .form-container, .review-card {
+            background-color: #1e293b;
+            border: 1px solid #334155;
+            padding: 20px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            margin-top: 8px;
+            margin-bottom: 15px;
+            background-color: #0f172a;
+            border: 1px solid #475569;
+            border-radius: 8px;
+            color: #fff;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #9333ea;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background-color: #7e22ce;
+        }
+        .review-card h3 {
+            margin-top: 0;
+            color: #f1f5f9;
+        }
+        .review-card p {
+            margin-bottom: 0;
+            color: #cbd5e1;
+        }
     </style>
 </head>
 <body>
-    <h1>⭐ Отзывы наших клиентов</h1>
-    <p>Здесь вы можете почитать реальные отзывы покупателей Art Shop или оставить свой.</p>
 
-    <!-- Форма для отправки отзыва -->
-    <div class="form-box">
-        <h3>Оставить отзыв</h3>
+    <h1>⭐ Отзывы наших клиентов</h1>
+    <p class="desc">Здесь вы можете почитать реальные отзывы покупателей Art Shop или оставить свой.</p>
+
+    <div class="form-container">
+        <!-- Блок для вывода ошибок -->
+        {% if error %}
+            <div style="background-color: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #f87171; padding: 12px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-weight: bold;">
+                {{ error }}
+            </div>
+        {% endif %}
+
         <form action="/add-review" method="POST">
-            <label>Ваше имя / Discord:</label>
-            <input type="text" name="username" placeholder="@username" required>
-            <label>Ваш отзыв:</label>
-            <textarea name="text" rows="3" placeholder="Напишите пару слов о магазине..." required></textarea>
+            <label for="username">Ваше имя / Discord:</label>
+            <input type="text" id="username" name="username" placeholder="@username" required>
+
+            <label for="text">Ваш отзыв:</label>
+            <textarea id="text" name="text" rows="4" placeholder="Напишите пару слов о магазине..." required></textarea>
+
             <button type="submit">Отправить отзыв</button>
         </form>
     </div>
 
     <!-- Список отзывов -->
-    <div id="reviews-list">
-        {% for review in reviews %}
+    {% for review in reviews %}
         <div class="review-card">
             <h3>{{ review.username }}</h3>
             <p>{{ review.text }}</p>
         </div>
-        {% endfor %}
-    </div>
+    {% endfor %}
+
 </body>
 </html>

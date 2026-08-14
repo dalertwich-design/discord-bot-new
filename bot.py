@@ -35,14 +35,13 @@ def save_reviews(reviews):
 
 REVIEWS_LIST = load_reviews()
 
-# Шаблон страницы с новым дизайном карточек отзывов
+# Шаблон страницы с дизайном карточек под цвет печеньки
 REVIEWS_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <title>Отзывы — Art Shop</title>
-    <!-- Подключаем Tailwind CSS для работы классов в карточках -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -164,10 +163,10 @@ REVIEWS_TEMPLATE = """
         {% endif %}
     </div>
 
-    <!-- Секция 2: Список отзывов в вашем новом дизайне карточек -->
+    <!-- Секция 2: Список отзывов (дизайн карточки под цвет печеньки) -->
     <div id="tab-reviews" class="section-content" style="gap: 40px; margin-top: 40px;">
         {% for review in reviews %}
-        <div class="[--shadow:rgba(60,64,67,0.3)_0_1px_2px_0,rgba(60,64,67,0.15)_0_2px_6px_2px] w-4/5 h-auto rounded-2xl bg-white [box-shadow:var(--shadow)] max-w-[300px] text-zinc-800">
+        <div class="[--shadow:rgba(60,64,67,0.3)_0_1px_2px_0,rgba(60,64,67,0.15)_0_2px_6px_2px] w-4/5 h-auto rounded-2xl bg-[#fdf8f2] border border-[#e7d4c0] [box-shadow:var(--shadow)] max-w-[300px] text-[#4a3525]">
             <div class="flex flex-col items-center justify-between pt-9 px-6 pb-6 relative">
                 <!-- Иконка печеньки сверху -->
                 <span class="relative mx-auto -mt-16 mb-6">
@@ -180,18 +179,18 @@ REVIEWS_TEMPLATE = """
                     </svg>
                 </span>
 
-                <!-- Ник пользователя вместо заголовка конфиденциальности -->
-                <h5 class="text-sm font-bold mb-2 text-left mr-auto text-zinc-800">
+                <!-- Ник пользователя -->
+                <h5 class="text-sm font-bold mb-2 text-left mr-auto text-[#5c4033]">
                     {{ review.username }}
                 </h5>
 
                 <!-- Текст отзыва -->
-                <p class="w-full mb-4 text-sm text-justify text-zinc-600">
+                <p class="w-full mb-4 text-sm text-justify text-[#6b5141]">
                     {{ review.text }}
                 </p>
 
-                <!-- Время отзыва внизу -->
-                <span class="text-xs text-zinc-400 mr-auto mt-2">
+                <!-- Время отзыва -->
+                <span class="text-xs text-[#a48c77] mr-auto mt-2">
                     {{ review.time }}
                 </span>
             </div>

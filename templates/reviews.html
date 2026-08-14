@@ -93,7 +93,7 @@
             position: absolute;
             top: 0;
             bottom: 0;
-            width: calc(100% / 2); /* Изменено под 2 элемента */
+            width: calc(100% / 2);
             border-radius: 1rem;
             z-index: 1;
             transition:
@@ -201,7 +201,17 @@
 
     <!-- Секция 1: Написать отзыв -->
     <div id="tab-write" class="section-content active">
-        <div class="form-container">
+        
+        {% if has_cooldown %}
+        <!-- Блок ограничения с таймером -->
+        <div class="form-container cooldown-box" style="text-align: center; padding: 30px;">
+            <p style="color: #cbd5e1; font-size: 16px; margin: 0;">
+                Вы уже оставили отзыв. Форма разблокируется через <b>60</b> сек.
+            </p>
+        </div>
+        {% else %}
+        <!-- Обычная форма отправки -->
+        <div class="form-container" id="form-card">
             {% if error %}
                 <div style="background-color: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #f87171; padding: 12px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-weight: bold;">
                     {{ error }}
@@ -218,6 +228,8 @@
                 <button type="submit">Отправить отзыв</button>
             </form>
         </div>
+        {% endif %}
+
     </div>
 
     <!-- Секция 2: Список отзывов -->
@@ -242,10 +254,52 @@
             }
         }
 
-        // Если с сервера пришла ошибка, автоматически открываем вкладку Write, чтобы пользователь её увидел
+        // Если с сервера пришла ошибка, автоматически открываем вкладку Write
         {% if error %}
             document.getElementById('glass-write').checked = true;
             switchTab('write');
+        {% endif %}
+
+        // Живой таймер обратного отсчета без перезагрузок
+        {% if has_cooldown %}
+        let timeLeft = 60;
+        const cooldownWrapper = document.querySelector('.cooldown-box');
+        const cooldownText = cooldownWrapper ? cooldownWrapper.querySelector('p') : null;
+        
+        if (cooldownText) {
+            const timerInterval = setInterval(function() {
+                timeLeft--;
+                if (timeLeft > 0) {
+                    cooldownText.innerHTML = `Вы уже оставили отзыв. Форма разблокируется через <b>${timeLeft}</b> сек.`;
+                } else {
+                    clearInterval(timerInterval);
+                    
+                    // Скрываем блок таймера
+                    if (cooldownWrapper) {
+                        cooldownWrapper.style.display = 'none';
+                    }
+                    
+                    // Возвращаем форму обратно на страницу
+                    const tabWrite = document.getElementById('tab-write');
+                    if (tabWrite && !document.getElementById('form-card')) {
+                        const newFormHTML = `
+                            <div class="form-container" id="form-card">
+                                <form action="/add-review" method="POST">
+                                    <label for="username">Ваше имя / Discord:</label>
+                                    <input type="text" id="username" name="username" placeholder="@username" required>
+
+                                    <label for="text">Ваш отзыв:</label>
+                                    <textarea id="text" name="text" rows="4" placeholder="Напишите пару слов о магазине..." required></textarea>
+
+                                    <button type="submit">Отправить отзыв</button>
+                                </form>
+                            </div>
+                        `;
+                        tabWrite.insertAdjacentHTML('beforeend', newFormHTML);
+                    }
+                }
+            }, 1000);
+        }
         {% endif %}
     </script>
 

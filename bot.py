@@ -7,7 +7,6 @@ from discord.ui import View, Button, Select
 from flask import Flask, render_template, request, jsonify
 from threading import Thread
 
-# Настройка Flask
 app = Flask(__name__, template_folder='templates')
 
 @app.route('/')
@@ -34,10 +33,9 @@ async def send_receipt(data):
         embed.add_field(name="🛒 Выбранный товар", value=data.get('product', 'Товар'), inline=False)
         embed.add_field(name="👤 Покупатель", value=data.get('discord', 'User'), inline=True)
         embed.add_field(name="💰 Стоимость", value=data.get('price', '0$'), inline=True)
-        embed.set_footer(text=f"ID транзакции: UI-77-9X04-ART")
+        embed.set_footer(text="ID транзакции: UI-77-9X04-ART")
         await channel.send(embed=embed)
 
-# Каталог товаров и цен из ТЗ
 PRODUCTS = {
     "Discord": {"Nitro Full": "200$", "Nitro Basic": "100$", "Украшение": "50$"},
     "Telegram": {"Telegram Premium": "150$"},
@@ -47,7 +45,6 @@ PRODUCTS = {
     "ПАБГ": {"600 UC": "60$", "1800 UC": "170$"}
 }
 
-# Интерактивное меню для !info
 class InfoView(View):
     def __init__(self):
         super().__init__(timeout=None)
@@ -117,8 +114,7 @@ class TicketControlView(View):
 
     @discord.ui.button(label="Карта", style=discord.ButtonStyle.primary, custom_id="show_card")
     async def show_card(self, interaction: discord.Interaction, button: Button):
-        # Отправляем картинку карты из вашего ТЗ
-        await interaction.response.send_message("💳 Реквизиты карты:", file=discord.File("path_to_card.png") if os.path.exists("path_to_card.png") else None, ephemeral=True)
+        await interaction.response.send_message("💳 Реквизиты карты:", ephemeral=True)
 
     @discord.ui.button(label="Товары", style=discord.ButtonStyle.secondary, custom_id="show_prod_ticket")
     async def show_prod(self, interaction: discord.Interaction, button: Button):
@@ -127,7 +123,6 @@ class TicketControlView(View):
             text += f"\n**{cat}**:\n" + "".join([f"  • {k}: {v}\n" for k, v in items.items()])
         await interaction.response.send_message(text, ephemeral=True)
 
-# Настройка бота Discord
 intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents)
@@ -145,7 +140,6 @@ async def info_command(ctx):
 async def on_ready():
     print(f'Бот {bot.user} запущен!')
 
-# Запуск Flask в отдельном потоке
 def run_flask():
     port = int(os.environ.get("PORT", 8080))
     app.run(host='0.0.0.0', port=port)

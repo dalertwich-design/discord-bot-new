@@ -14,7 +14,6 @@ app = Flask(__name__, template_folder='templates')
 def home():
     return render_template('index.html')
 
-# Файл для сохранения отзывов
 REVIEWS_FILE = 'reviews.json'
 
 def load_reviews():
@@ -35,7 +34,6 @@ def save_reviews(reviews):
 
 REVIEWS_LIST = load_reviews()
 
-# Шаблон страницы: общий фон изменен на песочный, везде белый текст, добавлены печеньки сверху в блоки
 REVIEWS_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="ru">
@@ -45,7 +43,7 @@ REVIEWS_TEMPLATE = """
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
-            background-color: #fdf8f2; /* Изменили общий фон страницы на песочный */
+            background-color: #fdf8f2;
             color: #ffffff;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
@@ -120,7 +118,7 @@ REVIEWS_TEMPLATE = """
             text-align: center;
             color: #4a3525;
             position: relative;
-            margin-top: 35px; /* отступ для печеньки сверху */
+            margin-top: 35px;
         }
         .cooldown-box h3 { color: #d97706; margin-top: 10px; margin-bottom: 10px; }
         .cooldown-box p { color: #6b5141; margin: 0; }
@@ -137,13 +135,71 @@ REVIEWS_TEMPLATE = """
         }
         button[type="submit"]:hover { background-color: #9a541c; }
 
-        /* Стиль для иконки печеньки сверху блоков */
         .cookie-icon-top {
             position: absolute;
             top: -25px;
             left: 50%;
             transform: translateX(-50%);
         }
+
+        /* Кастомизированный лоадер из печенек (на базе вашего кода) */
+        .loader-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 120px;
+            position: relative;
+            width: 100%;
+        }
+        .loader {
+            --fill-color: #bc6c25;
+            --shine-color: #bc6c2533;
+            transform: scale(0.6);
+            width: 100px;
+            height: auto;
+            position: relative;
+            filter: drop-shadow(0 0 10px var(--shine-color));
+        }
+        .loader #pegtopone {
+            position: absolute;
+            animation: flowe-one 1s linear infinite;
+        }
+        .loader #pegtoptwo {
+            position: absolute;
+            opacity: 0;
+            transform: scale(0) translateY(-200px) translateX(-100px);
+            animation: flowe-two 1s linear infinite;
+            animation-delay: 0.3s;
+        }
+        .loader #pegtopthree {
+            position: absolute;
+            opacity: 0;
+            transform: scale(0) translateY(-200px) translateX(100px);
+            animation: flowe-three 1s linear infinite;
+            animation-delay: 0.6s;
+        }
+        @keyframes flowe-one {
+            0% { transform: scale(0.5) translateY(-200px); opacity: 0; }
+            25% { transform: scale(0.75) translateY(-100px); opacity: 1; }
+            50% { transform: scale(1) translateY(0px); opacity: 1; }
+            75% { transform: scale(0.5) translateY(50px); opacity: 1; }
+            100% { transform: scale(0) translateY(100px); opacity: 0; }
+        }
+        @keyframes flowe-two {
+            0% { transform: scale(0.5) rotateZ(-10deg) translateY(-200px) translateX(-100px); opacity: 0; }
+            25% { transform: scale(1) rotateZ(-5deg) translateY(-100px) translateX(-50px); opacity: 1; }
+            50% { transform: scale(1) rotateZ(0deg) translateY(0px) translateX(-25px); opacity: 1; }
+            75% { transform: scale(0.5) rotateZ(5deg) translateY(50px) translateX(0px); opacity: 1; }
+            100% { transform: scale(0) rotateZ(10deg) translateY(100px) translateX(25px); opacity: 0; }
+        }
+        @keyframes flowe-three {
+            0% { transform: scale(0.5) rotateZ(10deg) translateY(-200px) translateX(100px); opacity: 0; }
+            25% { transform: scale(1) rotateZ(5deg) translateY(-100px) translateX(50px); opacity: 1; }
+            50% { transform: scale(1) rotateZ(0deg) translateY(0px) translateX(25px); opacity: 1; }
+            75% { transform: scale(0.5) rotateZ(-5deg) translateY(50px) translateX(0px); opacity: 1; }
+            100% { transform: scale(0) rotateZ(-10deg) translateY(100px) translateX(-25px); opacity: 0; }
+        }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
@@ -163,7 +219,6 @@ REVIEWS_TEMPLATE = """
     <div id="tab-write" class="section-content active">
         {% if has_cooldown %}
             <div class="cooldown-box">
-                <!-- Печенька сверху блока ограничения -->
                 <span class="cookie-icon-top">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" height="46" width="65">
                         <path stroke="#000" fill="#EAB789" d="M49.157 15.69L44.58.655l-12.422 1.96L21.044.654l-8.499 2.615-6.538 5.23-4.576 9.153v11.114l4.576 8.5 7.846 5.23 10.46 1.96 7.845-2.614 9.153 2.615 11.768-2.615 7.846-7.846 1.96-5.884.655-7.191-7.846-1.308-6.537-3.922z"></path>
@@ -173,12 +228,12 @@ REVIEWS_TEMPLATE = """
                         <path stroke-width="1.8" stroke="#644647" fill="#845556" d="M44.5 32.829c-.512 0-1.574.215-2 .5-.426.284-.342.263-.537.736a2.59 2.59 0 104.98.99c0-.686-.458-1.241-.943-1.726-.485-.486-.814-.5-1.5-.5zm-30.916-2.5c-.296 0-.912.134-1.159.311-.246.177-.197.164-.31.459a1.725 1.725 0 00-.086.932c.058.312.2.6.41.825.21.226.477.38.768.442.291.062.593.03.867-.092s.508-.329.673-.594a1.7 1.7 0 00.253-.896c0-.428-.266-.774-.547-1.076-.281-.302-.471-.31-.869-.311zm17.805-11.375c-.143-.492-.647-1.451-1.04-1.78-.392-.33-.348-.255-.857-.31a2.588 2.588 0 10.441 5.06c.66-.194 1.064-.788 1.395-1.39.33-.601.252-.92.06-1.58zm-22 2c-.143-.492-.647-1.451-1.04-1.78-.391-.33-.347-.255-.856-.31a2.589 2.589 0 10.44 5.06c.66-.194 1.064-.788 1.395-1.39.33-.601.252-.92.06-1.58Z"></path>
                     </svg>
                 </span>
-                <h3>⏳ Ограничение 24 часа</h3>
-                <p>Вы уже оставили отзыв. Следующий отзыв можно будет написать через 24 часа.</p>
+                <h3>⏳ Ограничение 1 минута</h3>
+                <p>Вы уже оставили отзыв. Следующий отзыв можно будет написать через 1 минуту.</p>
             </div>
         {% else %}
-            <div class="form-container" style="text-align: left;">
-                <!-- Печенька сверху формы -->
+            <!-- Блок формы -->
+            <div class="form-container" style="text-align: left;" id="form-card">
                 <span class="cookie-icon-top">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" height="46" width="65">
                         <path stroke="#000" fill="#EAB789" d="M49.157 15.69L44.58.655l-12.422 1.96L21.044.654l-8.499 2.615-6.538 5.23-4.576 9.153v11.114l4.576 8.5 7.846 5.23 10.46 1.96 7.845-2.614 9.153 2.615 11.768-2.615 7.846-7.846 1.96-5.884.655-7.191-7.846-1.308-6.537-3.922z"></path>
@@ -193,23 +248,39 @@ REVIEWS_TEMPLATE = """
                         {{ error }}
                     </div>
                 {% endif %}
-                <form action="/add-review" method="POST">
+                
+                <!-- Реальная форма -->
+                <form id="review-form" action="/add-review" method="POST" onsubmit="handleLoadingSubmit(event)">
                     <label for="username" style="color: #4a3525; font-weight: 600;">Ваше имя / Discord:</label>
                     <input type="text" id="username" name="username" placeholder="@username" required>
                     <label for="text" style="color: #4a3525; font-weight: 600;">Ваш отзыв:</label>
                     <textarea id="text" name="text" rows="4" placeholder="Напишите пару слов о магазине..." required></textarea>
                     <button type="submit">Отправить отзыв</button>
                 </form>
+
+                <!-- Красивый лоадер с печеньками (скрыт по умолчанию) -->
+                <div id="cookie-loader-box" class="hidden loader-container">
+                    <div class="loader">
+                        <div id="pegtopone">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" height="46" width="65"><path fill="#bc6c25" d="M49.157 15.69L44.58.655l-12.422 1.96L21.044.654l-8.499 2.615-6.538 5.23-4.576 9.153v11.114l4.576 8.5 7.846 5.23 10.46 1.96 7.845-2.614 9.153 2.615 11.768-2.615 7.846-7.846 1.96-5.884.655-7.191-7.846-1.308-6.537-3.922z"></path></svg>
+                        </div>
+                        <div id="pegtoptwo">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" height="46" width="65"><path fill="#bc6c25" d="M49.157 15.69L44.58.655l-12.422 1.96L21.044.654l-8.499 2.615-6.538 5.23-4.576 9.153v11.114l4.576 8.5 7.846 5.23 10.46 1.96 7.845-2.614 9.153 2.615 11.768-2.615 7.846-7.846 1.96-5.884.655-7.191-7.846-1.308-6.537-3.922z"></path></svg>
+                        </div>
+                        <div id="pegtopthree">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" height="46" width="65"><path fill="#bc6c25" d="M49.157 15.69L44.58.655l-12.422 1.96L21.044.654l-8.499 2.615-6.538 5.23-4.576 9.153v11.114l4.576 8.5 7.846 5.23 10.46 1.96 7.845-2.614 9.153 2.615 11.768-2.615 7.846-7.846 1.96-5.884.655-7.191-7.846-1.308-6.537-3.922z"></path></svg>
+                        </div>
+                    </div>
+                </div>
             </div>
         {% endif %}
     </div>
 
-    <!-- Секция 2: Список отзывов (карточки с печенькой) -->
+    <!-- Секция 2: Список отзывов -->
     <div id="tab-reviews" class="section-content" style="gap: 40px; margin-top: 40px;">
         {% for review in reviews %}
         <div class="[--shadow:rgba(60,64,67,0.1)_0_1px_2px_0,rgba(60,64,67,0.05)_0_2px_6px_2px] w-4/5 h-auto rounded-2xl bg-[#ffffff] border border-[#e7d4c0] [box-shadow:var(--shadow)] max-w-[300px] text-[#4a3525]">
             <div class="flex flex-col items-center justify-between pt-9 px-6 pb-6 relative">
-                <!-- Иконка печеньки сверху -->
                 <span class="relative mx-auto -mt-16 mb-6">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" height="46" width="65">
                         <path stroke="#000" fill="#EAB789" d="M49.157 15.69L44.58.655l-12.422 1.96L21.044.654l-8.499 2.615-6.538 5.23-4.576 9.153v11.114l4.576 8.5 7.846 5.23 10.46 1.96 7.845-2.614 9.153 2.615 11.768-2.615 7.846-7.846 1.96-5.884.655-7.191-7.846-1.308-6.537-3.922z"></path>
@@ -219,18 +290,12 @@ REVIEWS_TEMPLATE = """
                         <path stroke-width="1.8" stroke="#644647" fill="#845556" d="M44.5 32.829c-.512 0-1.574.215-2 .5-.426.284-.342.263-.537.736a2.59 2.59 0 104.98.99c0-.686-.458-1.241-.943-1.726-.485-.486-.814-.5-1.5-.5zm-30.916-2.5c-.296 0-.912.134-1.159.311-.246.177-.197.164-.31.459a1.725 1.725 0 00-.086.932c.058.312.2.6.41.825.21.226.477.38.768.442.291.062.593.03.867-.092s.508-.329.673-.594a1.7 1.7 0 00.253-.896c0-.428-.266-.774-.547-1.076-.281-.302-.471-.31-.869-.311zm17.805-11.375c-.143-.492-.647-1.451-1.04-1.78-.392-.33-.348-.255-.857-.31a2.588 2.588 0 10.441 5.06c.66-.194 1.064-.788 1.395-1.39.33-.601.252-.92.06-1.58zm-22 2c-.143-.492-.647-1.451-1.04-1.78-.391-.33-.347-.255-.856-.31a2.589 2.589 0 10.44 5.06c.66-.194 1.064-.788 1.395-1.39.33-.601.252-.92.06-1.58Z"></path>
                     </svg>
                 </span>
-
-                <!-- Ник пользователя -->
                 <h5 class="text-sm font-bold mb-2 text-left mr-auto text-[#5c4033]">
                     {{ review.username }}
                 </h5>
-
-                <!-- Текст отзыва -->
                 <p class="w-full mb-4 text-sm text-justify text-[#6b5141]">
                     {{ review.text }}
                 </p>
-
-                <!-- Время отзыва -->
                 <span class="text-xs text-[#a48c77] mr-auto mt-2">
                     {{ review.time }}
                 </span>
@@ -249,6 +314,21 @@ REVIEWS_TEMPLATE = """
                 document.getElementById('tab-reviews').classList.add('active');
             }
         }
+        
+        function handleLoadingSubmit(event) {
+            event.preventDefault();
+            const form = event.target;
+            
+            // Скрываем саму форму, показываем кастомный лоадер с печеньками
+            form.classList.add('hidden');
+            document.getElementById('cookie-loader-box').classList.remove('hidden');
+            
+            // Задержка ровно 1 секунда для красоты, затем отправка
+            setTimeout(() => {
+                form.submit();
+            }, 1000);
+        }
+
         {% if error %}
             document.getElementById('glass-write').checked = true;
             switchTab('write');
@@ -266,7 +346,7 @@ def reviews_page():
 @app.route('/add-review', methods=['POST'])
 def add_review():
     if request.cookies.get('review_sent'):
-        return render_template_string(REVIEWS_TEMPLATE, reviews=REVIEWS_LIST, has_cooldown=True, error="⏳ Действует ограничение 24 часа!")
+        return render_template_string(REVIEWS_TEMPLATE, reviews=REVIEWS_LIST, has_cooldown=True, error="⏳ Действует ограничение 1 минута!")
 
     username = request.form.get('username')
     text = request.form.get('text')
@@ -287,18 +367,17 @@ def add_review():
     save_reviews(REVIEWS_LIST)
     
     response = make_response(render_template_string(REVIEWS_TEMPLATE, reviews=REVIEWS_LIST, has_cooldown=True))
-    response.set_cookie('review_sent', 'true', max_age=86400)
+    # Установлено время жизни куки 60 секунд (1 минута)
+    response.set_cookie('review_sent', 'true', max_age=60)
     return response
 
 @app.route('/api/order', methods=['POST'])
 def api_order():
     try:
         data = request.json
-        print("Получены данные заказа:", data)
         bot.loop.create_task(send_receipt(data))
         return jsonify({"status": "success"})
     except Exception as e:
-        print("Ошибка в api_order:", str(e))
         return jsonify({"status": "error", "message": str(e)}), 500
 
 async def send_receipt(data):

@@ -144,11 +144,15 @@ async def info_command(ctx):
 async def review_command(ctx):
     embed = discord.Embed(
         title="⭐ Отзывы о магазине Art Shop",
-        description="Вы можете почитать отзывы наших клиентов или оставить свой в специальном канале!",
+        description="Нажмите на кнопку ниже, чтобы открыть страницу с отзывами на нашем сайте!",
         color=discord.Color.purple()
     )
-    embed.add_field(name="Канал с отзывами", value="Перейдите в канал **#отзывы** на нашем сервере.", inline=False)
-    await ctx.send(embed=embed)
+    
+    view = View()
+    # Замените ссылку ниже на адрес вашего приложения на Railway и добавьте /reviews в конце
+    view.add_item(Button(label="Смотреть отзывы на сайте", style=discord.ButtonStyle.link, url="https://discord-bot-new-production.up.railway.app/reviews"))
+    
+    await ctx.send(embed=embed, view=view)
 
 @bot.event
 async def on_ready():
@@ -157,6 +161,9 @@ async def on_ready():
 def run_flask():
     port = int(os.environ.get("PORT", 8080))
     app.run(host='0.0.0.0', port=port)
+    @app.route('/reviews')
+def reviews_page():
+    return render_template('reviews.html')
 
 Thread(target=run_flask).start()
 bot.run(os.environ.get("DISCORD_TOKEN"))

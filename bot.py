@@ -35,7 +35,7 @@ def save_reviews(reviews):
 
 REVIEWS_LIST = load_reviews()
 
-# Шаблон страницы с песочным дизайном карточек и измененным цветом текста
+# Шаблон страницы: белый текст везде, песочный фон у блоков формы и карточек
 REVIEWS_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="ru">
@@ -46,7 +46,7 @@ REVIEWS_TEMPLATE = """
     <style>
         body {
             background-color: #0f172a;
-            color: #f8fafc;
+            color: #ffffff;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 40px 20px;
@@ -65,15 +65,15 @@ REVIEWS_TEMPLATE = """
             padding: 8px 16px;
             border-radius: 12px;
             font-weight: bold;
-            color: #d4a373;
+            color: #ffffff;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
             font-size: 14px;
         }
-        h1 { color: #d4a373; margin-bottom: 10px; margin-top: 20px; }
-        p.desc { color: #b08968; margin-bottom: 25px; text-align: center; }
+        h1 { color: #ffffff; margin-bottom: 10px; margin-top: 20px; }
+        p.desc { color: #ffffff; margin-bottom: 25px; text-align: center; opacity: 0.9; }
         .glass-radio-group {
             --bg: rgba(255, 255, 255, 0.06);
-            --text: #e5e5e5;
+            --text: #ffffff;
             display: flex;
             position: relative;
             background: var(--bg);
@@ -90,8 +90,8 @@ REVIEWS_TEMPLATE = """
             font-size: 14px; padding: 0.8rem 1.6rem; cursor: pointer; font-weight: 600; letter-spacing: 0.3px;
             color: var(--text); position: relative; z-index: 2; transition: color 0.3s ease-in-out;
         }
-        .glass-radio-group label:hover { color: white; }
-        .glass-radio-group input:checked + label { color: #fff; }
+        .glass-radio-group label:hover { color: #ffffff; opacity: 1; }
+        .glass-radio-group input:checked + label { color: #ffffff; }
         .glass-glider {
             position: absolute; top: 0; bottom: 0; width: calc(100% / 2); border-radius: 1rem; z-index: 1;
             transition: transform 0.5s cubic-bezier(0.37, 1.95, 0.66, 0.56), background 0.4s ease-in-out, box-shadow 0.4s ease-in-out;
@@ -103,26 +103,39 @@ REVIEWS_TEMPLATE = """
         }
         #glass-reviews:checked ~ .glass-glider {
             transform: translateX(100%);
-            background: linear-gradient(135deg, #d4a37355, #d4a373);
-            box-shadow: 0 0 18px rgba(212, 163, 115, 0.5), 0 0 10px rgba(254, 250, 224, 0.4) inset;
+            background: linear-gradient(135deg, #e7d4c055, #e7d4c0);
+            box-shadow: 0 0 18px rgba(231, 212, 192, 0.5), 0 0 10px rgba(255, 255, 255, 0.4) inset;
         }
         .section-content { display: none; width: 100%; max-width: 600px; flex-direction: column; align-items: center; }
         .section-content.active { display: flex; }
+        
+        /* Блоки формы и ограничения теперь с песочным фоном в стиле печеньки */
         .form-container, .cooldown-box {
-            background-color: #1e293b; border: 1px solid #334155; padding: 25px; border-radius: 12px;
-            width: 100%; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); box-sizing: border-box; text-align: center;
+            background-color: #fdf8f2; 
+            border: 1px solid #e7d4c0; 
+            padding: 25px; 
+            border-radius: 16px;
+            width: 100%; 
+            margin-bottom: 20px; 
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); 
+            box-sizing: border-box; 
+            text-align: center;
+            color: #4a3525;
         }
-        .cooldown-box h3 { color: #f87171; margin-top: 0; margin-bottom: 10px; }
-        .cooldown-box p { color: #94a3b8; margin: 0; }
+        .cooldown-box h3 { color: #d97706; margin-top: 0; margin-bottom: 10px; }
+        .cooldown-box p { color: #6b5141; margin: 0; }
+        
         input, textarea {
             width: 100%; padding: 12px; margin-top: 8px; margin-bottom: 15px;
-            background-color: #0f172a; border: 1px solid #475569; border-radius: 8px; color: #fff; box-sizing: border-box; text-align: left;
+            background-color: #ffffff; border: 1px solid #d4b59d; border-radius: 8px; color: #4a3525; box-sizing: border-box; text-align: left;
         }
+        input::placeholder, textarea::placeholder { color: #a48c77; }
+        
         button[type="submit"] {
             background-color: #bc6c25; color: white; padding: 12px 20px; border: none; border-radius: 8px;
             cursor: pointer; font-weight: bold; width: 100%; transition: background 0.2s;
         }
-        button[type="submit"]:hover { background-color: #dda15e; }
+        button[type="submit"]:hover { background-color: #9a541c; }
     </style>
 </head>
 <body>
@@ -148,14 +161,14 @@ REVIEWS_TEMPLATE = """
         {% else %}
             <div class="form-container" style="text-align: left;">
                 {% if error %}
-                    <div style="background-color: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #f87171; padding: 12px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-weight: bold;">
+                    <div style="background-color: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #b91c1c; padding: 12px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-weight: bold;">
                         {{ error }}
                     </div>
                 {% endif %}
                 <form action="/add-review" method="POST">
-                    <label for="username" style="color: #e5e5e5;">Ваше имя / Discord:</label>
+                    <label for="username" style="color: #4a3525; font-weight: 600;">Ваше имя / Discord:</label>
                     <input type="text" id="username" name="username" placeholder="@username" required>
-                    <label for="text" style="color: #e5e5e5;">Ваш отзыв:</label>
+                    <label for="text" style="color: #4a3525; font-weight: 600;">Ваш отзыв:</label>
                     <textarea id="text" name="text" rows="4" placeholder="Напишите пару слов о магазине..." required></textarea>
                     <button type="submit">Отправить отзыв</button>
                 </form>
@@ -264,7 +277,7 @@ async def send_receipt(data):
     channel_id = 1339521364708687875
     channel = bot.get_channel(channel_id)
     if channel:
-        embed = discord.Embed(title="🧾 ART SHOP — DIGITAL RECEIPT", color=0xd4a373)
+        embed = discord.Embed(title="🧾 ART SHOP — DIGITAL RECEIPT", color=0x8b5cf6)
         embed.description = "Спасибо за покупку в нашем магазине! Ваш заказ успешно оформлен."
         embed.add_field(name="🛒 Выбранный товар", value=data.get('product', 'Товар'), inline=False)
         embed.add_field(name="👤 Покупатель", value=data.get('discord', 'User'), inline=True)
@@ -381,7 +394,7 @@ async def review_command(ctx):
     embed = discord.Embed(
         title="⭐ Отзывы о магазине Art Shop",
         description="Нажмите на кнопку ниже, чтобы открыть страницу с отзывами на нашем сайте!",
-        color=discord.Color.from_rgb(212, 163, 115)
+        color=discord.Color.purple()
     )
     
     view = View()

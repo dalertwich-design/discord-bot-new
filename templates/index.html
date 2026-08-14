@@ -1,372 +1,231 @@
+import os
+import asyncio
+from datetime import datetime
+import discord
+from discord.ext import commands
+from discord.ui import View, Button, Select
+from flask import Flask, render_template_string, request, jsonify
+
+# Настройка бота Discord
+intents = discord.Intents.default()
+intents.message_content = True
+intents.guilds = True
+bot = commands.Bot(command_prefix="!", intents=intents)
+
+# Настройка Flask
+app = Flask(__name__)
+
+# Каталог товаров и цен
+PRODUCTS = {
+    "Discord": {"Nitro Full": "200$", "Nitro Basic": "100$", "Украшение": "50$"},
+    "Telegram": {"Telegram Premium": "150$"},
+    "Spotify": {"Spotify Premium": "120$"},
+    "Роблокс": {"1000 Роблуксов": "80$", "5000 Роблуксов": "350$"},
+    "КС ГО": {"Нож | Драконий коготь": "450$", "AWP | Азимов": "90$"},
+    "ПАБГ": {"600 UC": "60$", "1800 UC": "170$"}
+}
+
+# ID каналов (замените при необходимости или бот создаст их автоматически при тикетах)
+REVIEW_CHANNEL_ID = None  # Сюда будут падать отзывы (можно указать ID канала)
+
+class InfoView(View):
+    def __init__(self):
+        super().__init__(timeout=None)
+
+    @discord.ui.button(label="Админ", style=discord.ButtonStyle.secondary, custom_id="btn_admin")
+    async def admin_button(self, interaction: discord.Interaction, button: Button):
+        # Желтая кнопка с черным текстом (через кастомное внедрение или стиль Secondary/Blurple, в API Discord цвета кнопок строго регламентированы, сделаем Primary/Secondary с эмбедом)
+        await create_ticket(interaction, "Поддержка / Администрация")
+
+    @discord.ui.button(label="Товары", style=discord.ButtonStyle.success, custom_id="btn_products")
+    async def products_button(self, interaction: discord.Interaction, button: Button):
+        await interaction.response.send_message("Выберите категорию товаров:", view=CategorySelectView(), ephemeral=True)
+
+class CategorySelectView(View):
+    def __init__(self):
+        super().__init__(timeout=180)
+        
+        select = Select(
+            placeholder="Выберите категорию...",
+            options=[discord.SelectOption(label=cat, description=f"Каталог {cat}") for cat in PRODUCTS.keys()]
+        )
+        select.callback = self.select_callback
+        self.add_item(select)
+
+    async def select_callback(self, interaction: discord.Interaction):
+        selected_cat = interaction.data["values"][0]
+        items_text = "\n".join([f"• **{item}** — `{price}`" for item, price in PRODUCTS[selected_cat].items()])
+        
+        embed = discord.Embed(title=f"📦 Товары в категории: {selected_cat}", description=items_text, color=discord.Color.blurple())
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+
+async def create_ticket(interaction: discord.Interaction, reason: str):
+    guild = interaction.guild
+    category = discord.utils.get(guild.categories, name="ТИКЕТЫ")
+    if not category:
+        category = await guild.create_category("ТИКЕТЫ")
+
+    # Создаем приватный канал для юзера
+    overwrites = {
+        guild.default_role: discord.PermissionOverwrite(read_messages=False),
+        interaction.user: discord.PermissionOverwrite(read_messages=True, send_messages=True),
+        guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True)
+    }
+    
+    channel = await guild.create_text_channel(f"ticket-{interaction.user.name}", category=category, overwrites=overwrites)
+    
+    current_time = datetime.now().strftime("%d.%m.%Y %H:%M")
+    
+    embed = discord.Embed(
+        title="🛒 Оформление заказа",
+        description=f"**Покупатель:** {interaction.user.mention}\n**Хотел купить:** {reason}\n**Дата создания:** {current_time}",
+        color=discord.Color.green()
+    )
+    
+    view = TicketControlView(interaction.user.id)
+    await channel.send(embed=embed, view=view)
+    await interaction.response.send_message(f"✅ Ваш тикет создан: {channel.mention}", ephemeral=True)
+
+class TicketControlView(View):
+    def __init__(self, author_id):
+        super().__init__(timeout=None)
+        self.author_id = author_id
+
+    @discord.ui.button(label="Закрыть тикет", style=discord.ButtonStyle.danger, custom_id="close_ticket")
+    async def close_ticket(self, interaction: discord.Interaction, button: Button):
+        if interaction.user.id != self.author_id and not interaction.user.guild_permissions.administrator:
+            await interaction.response.send_message("❌ Закрыть тикет может только владелец!", ephemeral=True)
+            return
+        await interaction.response.send_message("🔒 Тикет закрывается через 3 секунды...")
+        await asyncio.sleep(3)
+        await interaction.channel.delete()
+
+    @discord.ui.button(label="Карта", style=discord.ButtonStyle.primary, custom_id="show_card")
+    async def show_card(self, interaction: discord.Interaction, button: Button):
+        # Отправляем изображение карты из ТЗ
+        await interaction.response.send_message("💳 Реквизиты для оплаты:", ephemeral=True)
+
+    @discord.ui.button(label="Товары", style=discord.ButtonStyle.secondary, custom_id="show_prod_ticket")
+    async def show_prod(self, interaction: discord.Interaction, button: Button):
+        text = ""
+        for cat, items in PRODUCTS.items():
+            text += f"\n**{cat}**:\n" + "".join([f"  • {k}: {v}\n" for k, v in items.items()])
+        await interaction.response.send_message(text, ephemeral=True)
+
+    @discord.ui.button(label="Оставить отзыв", style=discord.ButtonStyle.success, custom_id="leave_review")
+    async def leave_review(self, interaction: discord.Interaction, button: Button):
+        domain = os.environ.get("RENDER_EXTERNAL_URL", "http://127.0.0.1:8080")
+        url = f"{domain}/review?user={interaction.user}#{{interaction.user.name}}"
+        await interaction.response.send_message(f"📝 Перейдите по ссылке, чтобы оставить отзыв: {url}", ephemeral=True)
+
+@bot.command(name="info")
+async def info_command(ctx):
+    embed = discord.Embed(
+        title="Art Shop",
+        description="Добро пожаловать в наш премиум магазин, если желаете приобрести какой либо товар можете это оформлять нажимая ниже кнопку.\nЕсли хотите обратиться к администрации сделайте аналогичное действие.",
+        color=discord.Color.from_rgb(255, 215, 0) # Золотистый цвет
+    )
+    await ctx.send(embed=embed, view=InfoView())
+
+# HTML страница для отзывов с дизайном печеньки из ТЗ
+REVIEW_HTML = """
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Art Shop — App</title>
+    <title>Оставить отзыв — Art Shop</title>
     <style>
-        :root {
-            --primary: #7c3aed;
-            --bg-dark: #0f0e17;
-            --card-bg: #1a1926;
-            --text-light: #fffffe;
-            --text-muted: #a7a9be;
-        }
-
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-dark);
-            color: var(--text-light);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            padding-bottom: 110px;
-        }
-
-        /* Модальное окно регистрации (обязательное при первом входе) */
-        #authModal {
-            position: fixed;
-            inset: 0;
-            background: rgba(5, 5, 9, 0.95);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-            padding: 20px;
-        }
-
-        .auth-card {
-            background: var(--card-bg);
-            border: 1px solid rgba(124, 58, 237, 0.4);
-            padding: 30px;
-            border-radius: 20px;
-            width: 100%;
-            max-width: 380px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-            text-align: center;
-        }
-
-        .auth-card h2 { margin-top: 0; color: #fff; }
-        .auth-card input, .auth-card textarea {
-            width: 100%;
-            padding: 12px;
-            margin: 8px 0 15px 0;
-            background: #050509;
-            border: 1px solid var(--primary);
-            border-radius: 10px;
-            color: white;
-            box-sizing: border-box;
-        }
-
-        .container {
-            width: 90%;
-            max-width: 450px;
-            margin-top: 20px;
-        }
-
-        /* Управление вкладками (экранами) */
-        .page-section {
-            display: none;
-            width: 100%;
-        }
-        .page-section.active {
-            display: block;
-        }
-
-        /* Стиль профиля */
-        .discord-profile {
-            background: #111018;
-            border-radius: 20px;
-            border: 1px solid rgba(124, 58, 237, 0.3);
-            overflow: hidden;
-            margin-bottom: 25px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.5);
-        }
-        .profile-banner { height: 90px; background: linear-gradient(135deg, #7c3aed, #3b82f6); }
-        .profile-body { padding: 0 20px 20px 20px; position: relative; }
-        .profile-avatar { width: 80px; height: 80px; border-radius: 50%; border: 4px solid #111018; object-fit: cover; margin-top: -45px; margin-bottom: 12px; background: #222; }
-        .profile-name { font-size: 20px; font-weight: 800; color: #fff; margin-bottom: 2px; }
-        .profile-tag { font-size: 13px; color: var(--text-muted); margin-bottom: 12px; }
-        .profile-bio { font-size: 13px; color: #d1d5db; background: rgba(255,255,255,0.03); padding: 10px; border-radius: 10px; border-left: 3px solid var(--primary); margin-bottom: 15px; }
-
-        /* Карточки товаров */
-        .card {
-            background: var(--card-bg);
-            padding: 20px;
-            border-radius: 20px;
-            border: 1px solid rgba(124, 58, 237, 0.3);
-            margin-bottom: 20px;
-            box-sizing: border-box;
-        }
-        .card h3 { margin-top: 0; margin-bottom: 8px; color: #fff; }
-        .product-features { font-size: 13px; color: var(--text-muted); margin: 10px 0 15px 0; padding-left: 15px; }
-        .product-features li { margin-bottom: 4px; }
-        .price-tag { font-size: 22px; font-weight: 900; color: #3b82f6; margin-bottom: 15px; }
-
-        button {
-            width: 100%;
-            padding: 12px;
-            background: var(--primary);
-            border: none;
-            border-radius: 10px;
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        button:hover { background: #6d28d9; }
-
-        /* Чек на весь экран */
-        #receiptBox {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(15, 14, 23, 0.95);
-            z-index: 3000;
-            padding: 20px;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-        }
-
-        /* Нижняя панель навигации (Dock) */
-        .dock {
-            position: fixed;
-            bottom: 20px;
-            background: rgba(20, 19, 30, 0.85);
-            backdrop-filter: blur(12px);
-            padding: 8px 12px;
-            border-radius: 20px;
-            display: flex;
-            gap: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            z-index: 1000;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-
-        .dock-btn {
-            background: transparent;
-            border: 1px solid transparent;
-            width: 45px;
-            height: 45px;
-            border-radius: 12px;
-            cursor: pointer;
-            color: #fff;
-            font-size: 18px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: 0.2s;
-        }
-        .dock-btn:hover { background: rgba(124, 58, 237, 0.2); border-color: rgba(124, 58, 237, 0.4); }
-        .dock-btn.active { background: var(--primary); border-color: var(--primary); }
+        body { background-color: #1e1e24; font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; color: #333; }
+        .card { background: #f4f4f4; width: 400px; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); position: relative; text-align: center; }
+        .cookie-img { width: 70px; height: 70px; position: absolute; top: -35px; left: calc(50% - 35px); }
+        .username { font-size: 18px; font-weight: bold; color: #555; margin-bottom: 10px; }
+        textarea { width: 100%; height: 90px; border-radius: 10px; border: 1px solid #ccc; padding: 10px; resize: none; font-size: 14px; box-sizing: border-box; margin-bottom: 15px; }
+        .btn { background: #d4a373; color: white; border: none; padding: 10px 25px; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; }
+        .btn:hover { background: #bc6c25; }
+        .success { display: none; font-size: 18px; color: #2d6a4f; font-weight: bold; }
     </style>
 </head>
 <body>
-
-    <!-- МОДАЛЬНОЕ ОКНО РЕГИСТРАЦИИ (ПЕРВЫЙ ВХОД) -->
-    <div id="authModal" style="display: none;">
-        <div class="auth-card">
-            <h2>Регистрация</h2>
-            <p style="font-size: 13px; color: var(--text-muted);">Создайте профиль для доступа к магазину</p>
-            <input type="text" id="regUsername" placeholder="Ваш никнэйм">
-            <input type="text" id="regAvatar" placeholder="Ссылка на аватарку (URL)">
-            <textarea id="regBio" placeholder="Статус / О себе" rows="2"></textarea>
-            <button onclick="registerUser()">Зарегистрироваться</button>
+    <div class="card">
+        <img class="cookie-img" src="https://cdn-icons-png.flaticon.com/512/541/541349.png" alt="cookie">
+        <div id="form-container">
+            <div class="username" id="user-tag">Загрузка...</div>
+            <textarea id="review-text" placeholder="Напишите ваш отзыв здесь..."></textarea>
+            <br>
+            <button class="btn" onclick="sendReview()">Accept</button>
         </div>
-    </div>
-
-    <!-- ЧЕК ЗАКАЗА (ПОЯВЛЯЕТСЯ ПОВЕРХ ВСЕГО) -->
-    <div id="receiptBox">
-        <div style="background: var(--card-bg); padding: 30px; border-radius: 20px; border: 1px solid var(--primary); width: 100%; max-width: 320px; box-sizing: border-box;">
-            <h3 style="color: #4ade80; margin-top:0;">🧾 Чек заказа</h3>
-            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 5px;">Товар:</p>
-            <b id="recProduct" style="color:#fff; font-size: 16px;"></b>
-            <p style="font-size: 13px; color: var(--text-muted); margin: 10px 0 5px 0;">Сумма:</p>
-            <b id="recPrice" style="color:#3b82f6; font-size: 18px;"></b>
-            <p style="font-size: 13px; color: var(--text-muted); margin: 10px 0 5px 0;">Покупатель:</p>
-            <b id="recUser" style="color:#fff; font-size: 14px;"></b>
-            <button style="background: #ef4444; margin-top: 20px;" onclick="closeReceipt()">Закрыть чек</button>
+        <div id="success-container" class="success">
+            Ваш отзыв успешно отправлено! ✅
         </div>
-    </div>
-
-    <div class="container">
-
-        <!-- 1. ГЛАВНАЯ СТРАНИЦА -->
-        <div id="section-home" class="page-section active">
-            <div class="card" style="text-align: center; padding: 30px 20px;">
-                <h2>Добро пожаловать в Art Shop! 🌟</h2>
-                <p style="color: var(--text-muted); font-size: 14px;">Лучший магазин цифровых товаров и подписок.</p>
-                <button onclick="switchTab('shop', document.querySelectorAll('.dock-btn')[1])" style="margin-top: 15px;">Перейти к товарам 🛒</button>
-            </div>
-        </div>
-
-        <!-- 2. РАЗДЕЛ ТОВАРОВ (МАГАЗИН) -->
-        <div id="section-shop" class="page-section">
-            <h2 style="margin-bottom: 15px;">🛒 Каталог товаров</h2>
-            
-            <div class="card">
-                <h3>💬 Discord Nitro Full</h3>
-                <p style="font-size: 13px; color: var(--text-muted);">Официальная подписка Discord.</p>
-                <ul class="product-features">
-                    <li>✨ Анимированные аватары</li>
-                    <li>🚀 2 буста сервера</li>
-                </ul>
-                <div class="price-tag">200$</div>
-                <button onclick="makeOrder('Discord Nitro Full', '200$')">Оформить заказ</button>
-            </div>
-
-            <div class="card">
-                <h3>✈️ Telegram Premium</h3>
-                <p style="font-size: 13px; color: var(--text-muted);">Премиум статус в Telegram.</p>
-                <ul class="product-features">
-                    <li>⭐ Увеличенные лимиты</li>
-                    <li>🎤 Расшифровка голоса</li>
-                </ul>
-                <div class="price-tag">150$</div>
-                <button onclick="makeOrder('Telegram Premium', '150$')">Оформить заказ</button>
-            </div>
-        </div>
-
-        <!-- 3. ПРОФИЛЬ -->
-        <div id="section-profile" class="page-section">
-            <div class="discord-profile">
-                <div class="profile-banner"></div>
-                <div class="profile-body">
-                    <img id="viewAvatar" src="" alt="Avatar" class="profile-avatar">
-                    <div class="profile-name" id="viewUsername">User</div>
-                    <div class="profile-tag" id="viewTag">@user • Клиент</div>
-                    <div class="profile-bio" id="viewBio">Статус не указан</div>
-                    <button onclick="openEditProfile()">Редактировать профиль</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- 4. НАСТРОЙКИ -->
-        <div id="section-settings" class="page-section">
-            <div class="card">
-                <h3>⚙️ Настройки</h3>
-                <p style="font-size: 13px; color: var(--text-muted);">Управление аккаунтом</p>
-                <button style="background: #ef4444; margin-top: 15px;" onclick="logout()">Выйти из аккаунта</button>
-            </div>
-        </div>
-
-    </div>
-
-    <!-- НИЖНЯЯ ПАНЕЛЬ НАВИГАЦИИ (DOCK) -->
-    <div class="dock">
-        <button class="dock-btn active" onclick="switchTab('home', this)" title="Главная">🏠</button>
-        <button class="dock-btn" onclick="switchTab('shop', this)" title="Магазин">🛒</button>
-        <button class="dock-btn" onclick="switchTab('profile', this)" title="Профиль">👤</button>
-        <button class="dock-btn" onclick="switchTab('settings', this)" title="Настройки">⚙️</button>
     </div>
 
     <script>
-        // Проверка при загрузке: если нет пользователя, показываем модалку регистрации
-        window.onload = () => {
-            const savedUser = localStorage.getItem('art_user');
-            if (!savedUser) {
-                document.getElementById('authModal').style.display = 'flex';
-            } else {
-                loadProfileData();
-            }
-        }
+        const urlParams = new URLSearchParams(window.location.search);
+        const discordUser = urlParams.get('user') || 'Аноним';
+        document.getElementById('user-tag').innerText = discordUser;
 
-        // Регистрация
-        function registerUser() {
-            const username = document.getElementById('regUsername').value.trim();
-            const avatar = document.getElementById('regAvatar').value.trim();
-            const bio = document.getElementById('regBio').value.trim();
-
-            if (!username) {
-                alert('Введите никнейм!');
-                return;
-            }
-
-            localStorage.setItem('art_user', username);
-            localStorage.setItem('art_avatar', avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150');
-            localStorage.setItem('art_bio', bio || 'Статус не указан');
-
-            document.getElementById('authModal').style.display = 'none';
-            loadProfileData();
-        }
-
-        // Загрузка данных профиля
-        function loadProfileData() {
-            const user = localStorage.getItem('art_user') || 'User';
-            const avatar = localStorage.getItem('art_avatar') || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150';
-            const bio = localStorage.getItem('art_bio') || '...';
-
-            document.getElementById('viewUsername').innerText = user;
-            document.getElementById('viewTag').innerText = '@' + user.toLowerCase() + ' • Клиент';
-            document.getElementById('viewAvatar').src = avatar;
-            document.getElementById('viewBio').innerText = bio;
-        }
-
-        // Переключение между вкладками (экранами)
-        function switchTab(tabId, btnElement) {
-            document.querySelectorAll('.page-section').forEach(sec => {
-                sec.classList.remove('active');
+        async function sendReview() {
+            const text = document.getElementById('review-text').value;
+            if(!text) { alert('Напишите отзыв!'); return; }
+            
+            const response = await fetch('/api/review', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user: discordUser, text: text })
             });
-            document.getElementById('section-' + tabId).classList.add('active');
-
-            document.querySelectorAll('.dock-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            if (btnElement) btnElement.classList.add('active');
-        }
-
-        function openEditProfile() {
-            document.getElementById('regUsername').value = localStorage.getItem('art_user') || '';
-            document.getElementById('regAvatar').value = localStorage.getItem('art_avatar') || '';
-            document.getElementById('regBio').value = localStorage.getItem('art_bio') || '';
-            document.getElementById('authModal').style.display = 'flex';
-        }
-
-        function logout() {
-            localStorage.clear();
-            location.reload();
-        }
-
-        // Оформление заказа
-        async function makeOrder(productName, productPrice) {
-            const user = localStorage.getItem('art_user');
-            if (!user) {
-                document.getElementById('authModal').style.display = 'flex';
-                return;
+            
+            if(response.ok) {
+                document.getElementById('form-container').style.display = 'none';
+                document.getElementById('success-container').style.display = 'block';
             }
-
-            try {
-                const res = await fetch('/api/order', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ product: productName, price: productPrice, discord: user })
-                });
-
-                const data = await res.json();
-                if (data.status === 'success') {
-                    document.getElementById('recProduct').innerText = productName;
-                    document.getElementById('recPrice').innerText = productPrice;
-                    document.getElementById('recUser').innerText = user;
-                    
-                    // Показываем чек на весь экран
-                    document.getElementById('receiptBox').style.display = 'flex';
-                } else {
-                    alert('Ошибка сервера.');
-                }
-            } catch (err) {
-                alert('Ошибка соединения.');
-            }
-        }
-
-        // Закрытие чека
-        function closeReceipt() {
-            document.getElementById('receiptBox').style.display = 'none';
         }
     </script>
 </body>
 </html>
+"""
+
+@app.route('/review')
+def review_page():
+    return render_template_string(REVIEW_HTML)
+
+@app.route('/api/review', methods=['POST'])
+def api_review():
+    data = request.json
+    user = data.get('user')
+    text = data.get('text')
+    
+    # Отправляем отзыв в канал Discord
+    asyncio.run_coroutine_threadsafe(send_review_to_discord(user, text), bot.loop)
+    return jsonify({"status": "success"})
+
+async def send_review_to_discord(user, text):
+    # Ищем канал для отзывов или берем первый текстовый канал
+    channel = None
+    for guild in bot.guilds:
+        channel = discord.utils.get(guild.text_channels, name="отзывы") or discord.utils.get(guild.text_channels, name="reviews")
+        if not channel and guild.text_channels:
+            channel = guild.text_channels[0]
+        if channel:
+            embed = discord.Embed(title="💬 Новый отзыв от клиента", description=text, color=discord.Color.gold())
+            embed.set_footer(text=f"Автор: {user}")
+            await channel.send(embed=embed)
+            break
+
+@app.route('/')
+def index():
+    return "Art Shop Bot & Server is Running!"
+
+def run_flask():
+    app.run(host="0.0.0.0", port=8080)
+
+@bot.event
+async def on_ready():
+    print(f"Бот {bot.user} запущен!")
+
+if __name__ == "__main__":
+    import threading
+    t = threading.Thread(target=run_flask)
+    t.daemon = True
+    t.start()
+    
+    bot.run(os.environ.get("DISCORD_TOKEN"))

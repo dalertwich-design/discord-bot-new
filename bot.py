@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import discord
 from discord.ext import commands
 from discord.ui import View, Button, Select
-from flask import Flask, render_template, request, jsonify, make_response
+from flask import Flask, render_template_string, request, jsonify, make_response
 from threading import Thread
 
 app = Flask(__name__, template_folder='templates')
@@ -35,27 +35,209 @@ def save_reviews(reviews):
 
 REVIEWS_LIST = load_reviews()
 
+# Шаблон страницы с новым дизайном карточек отзывов
+REVIEWS_TEMPLATE = """
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Отзывы — Art Shop</title>
+    <!-- Подключаем Tailwind CSS для работы классов в карточках -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            min-height: 100vh;
+        }
+        .review-counter {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            background-color: #1e293b;
+            border: 1px solid #334155;
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-weight: bold;
+            color: #c084fc;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            font-size: 14px;
+        }
+        h1 { color: #c084fc; margin-bottom: 10px; margin-top: 20px; }
+        p.desc { color: #94a3b8; margin-bottom: 25px; text-align: center; }
+        .glass-radio-group {
+            --bg: rgba(255, 255, 255, 0.06);
+            --text: #e5e5e5;
+            display: flex;
+            position: relative;
+            background: var(--bg);
+            border-radius: 1rem;
+            backdrop-filter: blur(12px);
+            box-shadow: inset 1px 1px 4px rgba(255, 255, 255, 0.2), inset -1px -1px 6px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            width: fit-content;
+            margin-bottom: 40px;
+        }
+        .glass-radio-group input { display: none; }
+        .glass-radio-group label {
+            flex: 1; display: flex; align-items: center; justify-content: center; min-width: 100px;
+            font-size: 14px; padding: 0.8rem 1.6rem; cursor: pointer; font-weight: 600; letter-spacing: 0.3px;
+            color: var(--text); position: relative; z-index: 2; transition: color 0.3s ease-in-out;
+        }
+        .glass-radio-group label:hover { color: white; }
+        .glass-radio-group input:checked + label { color: #fff; }
+        .glass-glider {
+            position: absolute; top: 0; bottom: 0; width: calc(100% / 2); border-radius: 1rem; z-index: 1;
+            transition: transform 0.5s cubic-bezier(0.37, 1.95, 0.66, 0.56), background 0.4s ease-in-out, box-shadow 0.4s ease-in-out;
+        }
+        #glass-write:checked ~ .glass-glider {
+            transform: translateX(0%);
+            background: linear-gradient(135deg, #c0c0c055, #e0e0e0);
+            box-shadow: 0 0 18px rgba(192, 192, 192, 0.5), 0 0 10px rgba(255, 255, 255, 0.4) inset;
+        }
+        #glass-reviews:checked ~ .glass-glider {
+            transform: translateX(100%);
+            background: linear-gradient(135deg, #ffd70055, #ffcc00);
+            box-shadow: 0 0 18px rgba(255, 215, 0, 0.5), 0 0 10px rgba(255, 235, 150, 0.4) inset;
+        }
+        .section-content { display: none; width: 100%; max-width: 600px; flex-direction: column; align-items: center; }
+        .section-content.active { display: flex; }
+        .form-container, .cooldown-box {
+            background-color: #1e293b; border: 1px solid #334155; padding: 25px; border-radius: 12px;
+            width: 100%; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); box-sizing: border-box; text-align: center;
+        }
+        .cooldown-box h3 { color: #f87171; margin-top: 0; margin-bottom: 10px; }
+        .cooldown-box p { color: #94a3b8; margin: 0; }
+        input, textarea {
+            width: 100%; padding: 12px; margin-top: 8px; margin-bottom: 15px;
+            background-color: #0f172a; border: 1px solid #475569; border-radius: 8px; color: #fff; box-sizing: border-box; text-align: left;
+        }
+        button[type="submit"] {
+            background-color: #9333ea; color: white; padding: 12px 20px; border: none; border-radius: 8px;
+            cursor: pointer; font-weight: bold; width: 100%; transition: background 0.2s;
+        }
+        button[type="submit"]:hover { background-color: #7e22ce; }
+    </style>
+</head>
+<body>
+    <div class="review-counter">💬 Отзывов: <span id="review-count-num">{{ reviews|length }}</span></div>
+    <h1>⭐ Отзывы наших клиентов</h1>
+    <p class="desc">Поделитесь своим мнением о магазине или почитайте другие отзывы.</p>
+
+    <div class="glass-radio-group">
+        <input type="radio" name="glass-nav" id="glass-write" checked onchange="switchTab('write')">
+        <label for="glass-write">Write</label>
+        <input type="radio" name="glass-nav" id="glass-reviews" onchange="switchTab('reviews')">
+        <label for="glass-reviews">Reviews</label>
+        <div class="glass-glider"></div>
+    </div>
+
+    <!-- Секция 1: Написать отзыв -->
+    <div id="tab-write" class="section-content active">
+        {% if has_cooldown %}
+            <div class="cooldown-box">
+                <h3>⏳ Ограничение 24 часа</h3>
+                <p>Вы уже оставили отзыв. Следующий отзыв можно будет написать через 24 часа.</p>
+            </div>
+        {% else %}
+            <div class="form-container" style="text-align: left;">
+                {% if error %}
+                    <div style="background-color: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #f87171; padding: 12px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-weight: bold;">
+                        {{ error }}
+                    </div>
+                {% endif %}
+                <form action="/add-review" method="POST">
+                    <label for="username">Ваше имя / Discord:</label>
+                    <input type="text" id="username" name="username" placeholder="@username" required>
+                    <label for="text">Ваш отзыв:</label>
+                    <textarea id="text" name="text" rows="4" placeholder="Напишите пару слов о магазине..." required></textarea>
+                    <button type="submit">Отправить отзыв</button>
+                </form>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Секция 2: Список отзывов в вашем новом дизайне карточек -->
+    <div id="tab-reviews" class="section-content" style="gap: 40px; margin-top: 40px;">
+        {% for review in reviews %}
+        <div class="[--shadow:rgba(60,64,67,0.3)_0_1px_2px_0,rgba(60,64,67,0.15)_0_2px_6px_2px] w-4/5 h-auto rounded-2xl bg-white [box-shadow:var(--shadow)] max-w-[300px] text-zinc-800">
+            <div class="flex flex-col items-center justify-between pt-9 px-6 pb-6 relative">
+                <!-- Иконка печеньки сверху -->
+                <span class="relative mx-auto -mt-16 mb-6">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" height="46" width="65">
+                        <path stroke="#000" fill="#EAB789" d="M49.157 15.69L44.58.655l-12.422 1.96L21.044.654l-8.499 2.615-6.538 5.23-4.576 9.153v11.114l4.576 8.5 7.846 5.23 10.46 1.96 7.845-2.614 9.153 2.615 11.768-2.615 7.846-7.846 1.96-5.884.655-7.191-7.846-1.308-6.537-3.922z"></path>
+                        <path fill="#9C6750" d="M32.286 3.749c-6.94 3.65-11.69 11.053-11.69 19.591 0 8.137 4.313 15.242 10.724 19.052a20.513 20.513 0 01-8.723 1.937c-11.598 0-21-9.626-21-21.5 0-11.875 9.402-21.5 21-21.5 3.495 0 6.79.874 9.689 2.42z" clip-rule="evenodd" fill-rule="evenodd"></path>
+                        <path fill="#634647" d="M64.472 20.305a.954.954 0 00-1.172-.824 4.508 4.508 0 01-3.958-.934.953.953 0 00-1.076-.11c-.46.252-.977.383-1.502.382a3.154 3.154 0 01-2.97-2.11.954.954 0 00-.833-.634 4.54 4.54 0 01-4.205-4.507c.002-.23.022-.46.06-.687a.952.952 0 00-.213-.767 3.497 3.497 0 01-.614-3.5.953.953 0 00-.382-1.138 3.522 3.522 0 01-1.5-3.992.951.951 0 00-.762-1.227A22.611 22.611 0 0032.3 2.16 22.41 22.41 0 0022.657.001a22.654 22.654 0 109.648 43.15 22.644 22.644 0 0032.167-22.847zM22.657 43.4a20.746 20.746 0 110-41.493c2.566-.004 5.11.473 7.501 1.407a22.64 22.64 0 00.003 38.682 20.6 20.6 0 01-7.504 1.404zm19.286 0a20.746 20.746 0 112.131-41.384 5.417 5.417 0 001.918 4.635 5.346 5.346 0 00-.133 1.182A5.441 5.441 0 0046.879 11a5.804 5.804 0 00-.028.568 6.456 6.456 0 005.38 6.345 5.053 5.053 0 006.378 2.472 6.412 6.412 0 004.05 1.12 20.768 20.768 0 01-20.716 21.897z"></path>
+                        <path fill="#644647" d="M54.962 34.3a17.719 17.719 0 01-2.602 2.378.954.954 0 001.14 1.53 19.637 19.637 0 002.884-2.634.955.955 0 00-1.422-1.274z"></path>
+                        <path stroke-width="1.8" stroke="#644647" fill="#845556" d="M44.5 32.829c-.512 0-1.574.215-2 .5-.426.284-.342.263-.537.736a2.59 2.59 0 104.98.99c0-.686-.458-1.241-.943-1.726-.485-.486-.814-.5-1.5-.5zm-30.916-2.5c-.296 0-.912.134-1.159.311-.246.177-.197.164-.31.459a1.725 1.725 0 00-.086.932c.058.312.2.6.41.825.21.226.477.38.768.442.291.062.593.03.867-.092s.508-.329.673-.594a1.7 1.7 0 00.253-.896c0-.428-.266-.774-.547-1.076-.281-.302-.471-.31-.869-.311zm17.805-11.375c-.143-.492-.647-1.451-1.04-1.78-.392-.33-.348-.255-.857-.31a2.588 2.588 0 10.441 5.06c.66-.194 1.064-.788 1.395-1.39.33-.601.252-.92.06-1.58zm-22 2c-.143-.492-.647-1.451-1.04-1.78-.391-.33-.347-.255-.856-.31a2.589 2.589 0 10.44 5.06c.66-.194 1.064-.788 1.395-1.39.33-.601.252-.92.06-1.58Z"></path>
+                    </svg>
+                </span>
+
+                <!-- Ник пользователя вместо заголовка конфиденциальности -->
+                <h5 class="text-sm font-bold mb-2 text-left mr-auto text-zinc-800">
+                    {{ review.username }}
+                </h5>
+
+                <!-- Текст отзыва -->
+                <p class="w-full mb-4 text-sm text-justify text-zinc-600">
+                    {{ review.text }}
+                </p>
+
+                <!-- Время отзыва внизу -->
+                <span class="text-xs text-zinc-400 mr-auto mt-2">
+                    {{ review.time }}
+                </span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <script>
+        function switchTab(tabName) {
+            document.getElementById('tab-write').classList.remove('active');
+            document.getElementById('tab-reviews').classList.remove('active');
+            if (tabName === 'write') {
+                document.getElementById('tab-write').classList.add('active');
+            } else {
+                document.getElementById('tab-reviews').classList.add('active');
+            }
+        }
+        {% if error %}
+            document.getElementById('glass-write').checked = true;
+            switchTab('write');
+        {% endif %}
+    </script>
+</body>
+</html>
+"""
+
 @app.route('/reviews')
 def reviews_page():
     has_cooldown = request.cookies.get('review_sent') is not None
-    return render_template('reviews.html', reviews=REVIEWS_LIST, has_cooldown=has_cooldown)
+    return render_template_string(REVIEWS_TEMPLATE, reviews=REVIEWS_LIST, has_cooldown=has_cooldown)
 
 @app.route('/add-review', methods=['POST'])
 def add_review():
     if request.cookies.get('review_sent'):
-        return render_template('reviews.html', reviews=REVIEWS_LIST, has_cooldown=True, error="⏳ Действует ограничение 24 часа!")
+        return render_template_string(REVIEWS_TEMPLATE, reviews=REVIEWS_LIST, has_cooldown=True, error="⏳ Действует ограничение 24 часа!")
 
     username = request.form.get('username')
     text = request.form.get('text')
     
     if not username or not text:
-        return render_template('reviews.html', reviews=REVIEWS_LIST, has_cooldown=False, error="Заполните все поля!")
+        return render_template_string(REVIEWS_TEMPLATE, reviews=REVIEWS_LIST, has_cooldown=False, error="Заполните все поля!")
     
     if len(text) < 3 or len(text) > 500:
-        return render_template('reviews.html', reviews=REVIEWS_LIST, has_cooldown=False, error="Ошибка: Отзыв должен быть от 3 до 500 символов.")
+        return render_template_string(REVIEWS_TEMPLATE, reviews=REVIEWS_LIST, has_cooldown=False, error="Ошибка: Отзыв должен быть от 3 до 500 символов.")
 
     now = datetime.now()
-
     new_review = {
         "username": username,
         "text": text,
@@ -64,10 +246,8 @@ def add_review():
     REVIEWS_LIST.insert(0, new_review)
     save_reviews(REVIEWS_LIST)
     
-    # Ставим защитную куку на 24 часа (86400 секунд), чтобы пользователь не мог переписать
-    response = make_response(render_template('reviews.html', reviews=REVIEWS_LIST, has_cooldown=True))
+    response = make_response(render_template_string(REVIEWS_TEMPLATE, reviews=REVIEWS_LIST, has_cooldown=True))
     response.set_cookie('review_sent', 'true', max_age=86400)
-    
     return response
 
 @app.route('/api/order', methods=['POST'])

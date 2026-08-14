@@ -45,6 +45,8 @@ PRODUCTS = {
     "ПАБГ": {"600 UC": "60$", "1800 UC": "170$"}
 }
 
+# ... (весь предыдущий код такой же, меняем только класс InfoView)
+
 class InfoView(View):
     def __init__(self):
         super().__init__(timeout=None)
@@ -59,12 +61,13 @@ class InfoView(View):
 
     @discord.ui.button(label="Отзывы", style=discord.ButtonStyle.blurple, custom_id="btn_reviews")
     async def reviews_button(self, interaction: discord.Interaction, button: Button):
-        # Здесь укажите ссылку на ваш канал с отзывами или текст
-        await interaction.response.send_message("⭐ Почитать отзывы или оставить свой можно в специальном канале: #отзывы", ephemeral=True)
+        await interaction.response.send_message("⭐ Почитать отзывы можно в канале #отзывы!", ephemeral=True)
 
     @discord.ui.button(label="Админ", style=discord.ButtonStyle.secondary, custom_id="btn_admin")
     async def admin_button(self, interaction: discord.Interaction, button: Button):
         await create_ticket(interaction, "Обращение к администрации")
+
+# ... (остальной код бота оставляем прежним)
 
 class CategorySelectView(View):
     def __init__(self):

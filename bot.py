@@ -228,7 +228,7 @@ REVIEWS_TEMPLATE = """
                     </svg>
                 </span>
                 <h3>⏳ Ограничение 1 минута</h3>
-                <p>Вы уже оставили отзыв. Следующий отзыв можно будет написать через 1 минуту.</p>
+                <p>Вы уже оставили отзыв. Страница автоматически обновится, когда пройдет 1 минута.</p>
             </div>
         {% else %}
             <div class="form-container" style="text-align: left;" id="form-card">
@@ -324,6 +324,13 @@ REVIEWS_TEMPLATE = """
         {% if error %}
             document.getElementById('glass-write').checked = true;
             switchTab('write');
+        {% endif %}
+
+        {% if has_cooldown %}
+        // Автоматически обновляем страницу ровно через 60 секунд, когда кука истечет
+        setTimeout(function() {
+            window.location.reload();
+        }, 60000);
         {% endif %}
     </script>
 </body>

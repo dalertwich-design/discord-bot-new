@@ -35,7 +35,7 @@ def save_reviews(reviews):
 
 REVIEWS_LIST = load_reviews()
 
-# Шаблон страницы с дизайном карточек под цвет печеньки
+# Шаблон страницы с песочным дизайном карточек и измененным цветом текста
 REVIEWS_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="ru">
@@ -65,12 +65,12 @@ REVIEWS_TEMPLATE = """
             padding: 8px 16px;
             border-radius: 12px;
             font-weight: bold;
-            color: #c084fc;
+            color: #d4a373;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
             font-size: 14px;
         }
-        h1 { color: #c084fc; margin-bottom: 10px; margin-top: 20px; }
-        p.desc { color: #94a3b8; margin-bottom: 25px; text-align: center; }
+        h1 { color: #d4a373; margin-bottom: 10px; margin-top: 20px; }
+        p.desc { color: #b08968; margin-bottom: 25px; text-align: center; }
         .glass-radio-group {
             --bg: rgba(255, 255, 255, 0.06);
             --text: #e5e5e5;
@@ -103,8 +103,8 @@ REVIEWS_TEMPLATE = """
         }
         #glass-reviews:checked ~ .glass-glider {
             transform: translateX(100%);
-            background: linear-gradient(135deg, #ffd70055, #ffcc00);
-            box-shadow: 0 0 18px rgba(255, 215, 0, 0.5), 0 0 10px rgba(255, 235, 150, 0.4) inset;
+            background: linear-gradient(135deg, #d4a37355, #d4a373);
+            box-shadow: 0 0 18px rgba(212, 163, 115, 0.5), 0 0 10px rgba(254, 250, 224, 0.4) inset;
         }
         .section-content { display: none; width: 100%; max-width: 600px; flex-direction: column; align-items: center; }
         .section-content.active { display: flex; }
@@ -119,10 +119,10 @@ REVIEWS_TEMPLATE = """
             background-color: #0f172a; border: 1px solid #475569; border-radius: 8px; color: #fff; box-sizing: border-box; text-align: left;
         }
         button[type="submit"] {
-            background-color: #9333ea; color: white; padding: 12px 20px; border: none; border-radius: 8px;
+            background-color: #bc6c25; color: white; padding: 12px 20px; border: none; border-radius: 8px;
             cursor: pointer; font-weight: bold; width: 100%; transition: background 0.2s;
         }
-        button[type="submit"]:hover { background-color: #7e22ce; }
+        button[type="submit"]:hover { background-color: #dda15e; }
     </style>
 </head>
 <body>
@@ -153,9 +153,9 @@ REVIEWS_TEMPLATE = """
                     </div>
                 {% endif %}
                 <form action="/add-review" method="POST">
-                    <label for="username">Ваше имя / Discord:</label>
+                    <label for="username" style="color: #e5e5e5;">Ваше имя / Discord:</label>
                     <input type="text" id="username" name="username" placeholder="@username" required>
-                    <label for="text">Ваш отзыв:</label>
+                    <label for="text" style="color: #e5e5e5;">Ваш отзыв:</label>
                     <textarea id="text" name="text" rows="4" placeholder="Напишите пару слов о магазине..." required></textarea>
                     <button type="submit">Отправить отзыв</button>
                 </form>
@@ -163,7 +163,7 @@ REVIEWS_TEMPLATE = """
         {% endif %}
     </div>
 
-    <!-- Секция 2: Список отзывов (дизайн карточки под цвет печеньки) -->
+    <!-- Секция 2: Список отзывов (карточки с цветом печеньки) -->
     <div id="tab-reviews" class="section-content" style="gap: 40px; margin-top: 40px;">
         {% for review in reviews %}
         <div class="[--shadow:rgba(60,64,67,0.3)_0_1px_2px_0,rgba(60,64,67,0.15)_0_2px_6px_2px] w-4/5 h-auto rounded-2xl bg-[#fdf8f2] border border-[#e7d4c0] [box-shadow:var(--shadow)] max-w-[300px] text-[#4a3525]">
@@ -264,7 +264,7 @@ async def send_receipt(data):
     channel_id = 1339521364708687875
     channel = bot.get_channel(channel_id)
     if channel:
-        embed = discord.Embed(title="🧾 ART SHOP — DIGITAL RECEIPT", color=0x8b5cf6)
+        embed = discord.Embed(title="🧾 ART SHOP — DIGITAL RECEIPT", color=0xd4a373)
         embed.description = "Спасибо за покупку в нашем магазине! Ваш заказ успешно оформлен."
         embed.add_field(name="🛒 Выбранный товар", value=data.get('product', 'Товар'), inline=False)
         embed.add_field(name="👤 Покупатель", value=data.get('discord', 'User'), inline=True)
@@ -381,7 +381,7 @@ async def review_command(ctx):
     embed = discord.Embed(
         title="⭐ Отзывы о магазине Art Shop",
         description="Нажмите на кнопку ниже, чтобы открыть страницу с отзывами на нашем сайте!",
-        color=discord.Color.purple()
+        color=discord.Color.from_rgb(212, 163, 115)
     )
     
     view = View()

@@ -1,11 +1,13 @@
 import os
 import asyncio
 import json
-from datetime import datetime, timedelta
+import random
+import string
+from datetime import datetime
 import discord
 from discord.ext import commands
 from discord.ui import View, Button, Select
-from flask import Flask, render_template_string, request, jsonify, make_response
+from flask import Flask, render_template_string, request, make_response
 from threading import Thread
 
 app = Flask(__name__, template_folder='templates')
@@ -15,6 +17,7 @@ def home():
     return render_template('index.html')
 
 REVIEWS_FILE = 'reviews.json'
+CODES_FILE = 'codes.json'
 
 def load_reviews():
     if os.path.exists(REVIEWS_FILE):
@@ -32,7 +35,21 @@ def save_reviews(reviews):
     with open(REVIEWS_FILE, 'w', encoding='utf-8') as f:
         json.dump(reviews, f, ensure_ascii=False, indent=4)
 
+def load_codes():
+    if os.path.exists(CODES_FILE):
+        try:
+            with open(CODES_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except:
+            pass
+    return {} # Формат: {"REV-XXXX": False} (False — не использован, True — использован)
+
+def save_codes(codes):
+    with open(CODES_FILE, 'w', encoding='utf-8') as f:
+        json.dump(codes, f, ensure_ascii=False, indent=4)
+
 REVIEWS_LIST = load_reviews()
+PURCHASE_CODES = load_codes()
 
 REVIEWS_TEMPLATE = """
 <!DOCTYPE html>
@@ -202,7 +219,7 @@ REVIEWS_TEMPLATE = """
 <body>
     <div class="review-counter">💬 Отзывов: <span id="review-count-num">{{ reviews|length }}</span></div>
     <h1>⭐ Отзывы наших клиентов</h1>
-    <p class="desc">Поделитесь своим мнением о магазине или почитайте другие отзывы.</p>
+    <p class="desc">Только реальные покупатели могут оставить отзыв, используя код подтверждения.</p>
 
     <div class="glass-radio-group">
         <input type="radio" name="glass-nav" id="glass-write" checked onchange="switchTab('write')">
@@ -234,6 +251,10 @@ REVIEWS_TEMPLATE = """
             <form id="review-form" action="/add-review" method="POST" onsubmit="handleLoadingSubmit(event)">
                 <label for="username" style="color: #4a3525; font-weight: 600;">Ваше имя / Discord:</label>
                 <input type="text" id="username" name="username" placeholder="@username" required>
+                
+                <label for="code" style="color: #4a3525; font-weight: 600;">Код подтверждения покупки:</label>
+                <input type="text" id="code" name="code" placeholder="Например: REV-XXXX" required>
+
                 <label for="text" style="color: #4a3525; font-weight: 600;">Ваш отзыв:</label>
                 <textarea id="text" name="text" rows="4" placeholder="Напишите пару слов о магазине..." required></textarea>
                 <button type="submit">Отправить отзыв</button>
@@ -322,17 +343,36 @@ def reviews_page():
 @app.route('/add-review', methods=['POST'])
 def add_review():
     username = request.form.get('username')
+    code = request.form.get('code', '').strip()
     text = request.form.get('text')
     
-    if not username or not text:
-        resp = make_response(render_template_string(REVIEWS_TEMPLATE, reviews=REVIEWS_LIST, error="Заполните все поля!"))
+    if not username or not code or not text:
+        resp = make_response(render_template_string(REVIEWS_TEMPLATE, reviews=REVIEWS_LIST, error="Заполните все поля (включая код)!"))
         resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
         return resp
     
+    # Проверка кода
+    global PURCHASE_CODES
+    PURCHASE_CODES = load_codes()
+    
+    if code not in PURCHASE_CODES:
+        resp = make_response(render_template_string(REVIEWS_TEMPLATE, reviews=REVIEWS_LIST, error="Ошибка: Неверный код подтверждения!"))
+        resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        return resp
+        
+    if PURCHASE_CODES[code]: # Если True, значит уже использован
+        resp = make_response(render_template_string(REVIEWS_TEMPLATE, reviews=REVIEWS_LIST, error="Ошибка: Этот код уже был использован!"))
+        resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        return resp
+
     if len(text) < 3 or len(text) > 500:
         resp = make_response(render_template_string(REVIEWS_TEMPLATE, reviews=REVIEWS_LIST, error="Ошибка: Отзыв должен быть от 3 до 500 символов."))
         resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
         return resp
+
+    # Помечаем код как использованный
+    PURCHASE_CODES[code] = True
+    save_codes(PURCHASE_CODES)
 
     now = datetime.now()
     new_review = {
@@ -484,6 +524,22 @@ async def review_command(ctx):
     view.add_item(Button(label="Смотреть отзывы на сайте", style=discord.ButtonStyle.link, url="https://discord-bot-new-production.up.railway.app/reviews"))
     
     await ctx.send(embed=embed, view=view)
+
+@bot.command(name="gen_code")
+@commands.has_permissions(administrator=True)
+async def gen_code_command(ctx, member: discord.Member):
+    """Команда для админа: сгенерировать и отправить код покупателю в ЛС"""
+    code = "REV-" + ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+    
+    codes = load_codes()
+    codes[code] = False # False означает, что код активен
+    save_codes(codes)
+    
+    try:
+        await member.send(f"🎉 Спасибо за покупку в **Art Shop**!\nВаш одноразовый код для написания отзыва на сайте: `{code}`\nПерейдите на страницу отзывов и введите его в специальное поле.")
+        await ctx.send(f"✅ Код `{code}` успешно сгенерирован и отправлен в ЛС пользователю {member.mention}!")
+    except discord.Forbidden:
+        await ctx.send(f"⚠️ Не удалось отправить ЛС пользователю {member.mention}. Вот его код: `{code}`")
 
 @bot.event
 async def on_ready():

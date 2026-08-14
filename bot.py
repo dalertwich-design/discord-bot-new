@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import discord
 from discord.ext import commands
 from discord.ui import View, Button, Select
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, make_response
 from threading import Thread
 
 app = Flask(__name__, template_folder='templates')
@@ -37,34 +37,25 @@ REVIEWS_LIST = load_reviews()
 
 @app.route('/reviews')
 def reviews_page():
-    return render_template('reviews.html', reviews=REVIEWS_LIST)
+    has_cooldown = request.cookies.get('review_sent') is not None
+    return render_template('reviews.html', reviews=REVIEWS_LIST, has_cooldown=has_cooldown)
 
 @app.route('/add-review', methods=['POST'])
 def add_review():
+    if request.cookies.get('review_sent'):
+        return render_template('reviews.html', reviews=REVIEWS_LIST, has_cooldown=True, error="⏳ Действует ограничение 24 часа!")
+
     username = request.form.get('username')
     text = request.form.get('text')
     
     if not username or not text:
-        return render_template('reviews.html', reviews=REVIEWS_LIST, error="Заполните все поля!")
+        return render_template('reviews.html', reviews=REVIEWS_LIST, has_cooldown=False, error="Заполните все поля!")
     
-    # Проверка длины текста (от 3 до 500 символов)
     if len(text) < 3 or len(text) > 500:
-        return render_template('reviews.html', reviews=REVIEWS_LIST, error="Ошибка: Отзыв должен быть от 3 до 500 символов.")
+        return render_template('reviews.html', reviews=REVIEWS_LIST, has_cooldown=False, error="Ошибка: Отзыв должен быть от 3 до 500 символов.")
 
-    clean_username = username.strip().lower()
     now = datetime.now()
 
-    # Жёсткая проверка по нику за последние 24 часа
-    for rev in REVIEWS_LIST:
-        if rev.get("username", "").strip().lower() == clean_username:
-            try:
-                rev_time = datetime.strptime(rev.get("time", ""), "%Y-%m-%d %H:%M:%S")
-                if now - rev_time < timedelta(days=1):
-                    return render_template('reviews.html', reviews=REVIEWS_LIST, error=f"⏳ Пользователь {username} уже оставлял отзыв за последние 24 часа!")
-            except:
-                pass
-
-    # Добавляем новый отзыв
     new_review = {
         "username": username,
         "text": text,
@@ -73,7 +64,11 @@ def add_review():
     REVIEWS_LIST.insert(0, new_review)
     save_reviews(REVIEWS_LIST)
     
-    return render_template('reviews.html', reviews=REVIEWS_LIST)
+    # Ставим защитную куку на 24 часа (86400 секунд), чтобы пользователь не мог переписать
+    response = make_response(render_template('reviews.html', reviews=REVIEWS_LIST, has_cooldown=True))
+    response.set_cookie('review_sent', 'true', max_age=86400)
+    
+    return response
 
 @app.route('/api/order', methods=['POST'])
 def api_order():

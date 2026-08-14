@@ -1,10 +1,11 @@
 import os
 import asyncio
-from datetime import datetime
+import json
+from datetime import datetime, timedelta
 import discord
 from discord.ext import commands
 from discord.ui import View, Button, Select
-from flask import Flask, render_template, request, jsonify, make_response
+from flask import Flask, render_template, request, jsonify
 from threading import Thread
 
 app = Flask(__name__, template_folder='templates')
@@ -13,11 +14,26 @@ app = Flask(__name__, template_folder='templates')
 def home():
     return render_template('index.html')
 
-# Список для хранения отзывов в памяти
-REVIEWS_LIST = [
-    {"username": "@daler", "text": "Отличный магазин! Брал товар, всё пришло моментально, рекомендую!"},
-    {"username": "@user123", "text": "Быстрая поддержка и честные цены. Буду брать еще."}
-]
+# Файл для сохранения отзывов
+REVIEWS_FILE = 'reviews.json'
+
+def load_reviews():
+    if os.path.exists(REVIEWS_FILE):
+        try:
+            with open(REVIEWS_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except:
+            pass
+    return [
+        {"username": "@daler", "text": "Отличный магазин! Брал товар, всё пришло моментально, рекомендую!", "time": "2026-08-14 12:00:00"},
+        {"username": "@user123", "text": "Быстрая поддержка и честные цены. Буду брать еще.", "time": "2026-08-14 12:00:00"}
+    ]
+
+def save_reviews(reviews):
+    with open(REVIEWS_FILE, 'w', encoding='utf-8') as f:
+        json.dump(reviews, f, ensure_ascii=False, indent=4)
+
+REVIEWS_LIST = load_reviews()
 
 @app.route('/reviews')
 def reviews_page():
@@ -31,22 +47,33 @@ def add_review():
     if not username or not text:
         return reviews_page()
     
-    # Проверка: если у пользователя есть кука отправленного отзыва, блокируем спам
-    if request.cookies.get('review_sent'):
-        return "<h3>⏳ Вы уже оставили отзыв. Следующий отзыв можно будет написать через 24 часа!</h3><a href='/reviews'>Назад к отзывам</a>", 429
-
     # Проверка длины текста (от 3 до 500 символов)
     if len(text) < 3 or len(text) > 500:
         return "<h3>❌ Ошибка: Отзыв должен быть от 3 до 500 символов.</h3><a href='/reviews'>Назад к отзывам</a>", 400
 
-    # Добавляем отзыв в список
-    REVIEWS_LIST.insert(0, {"username": username, "text": text})
+    clean_username = username.strip().lower()
+    now = datetime.now()
 
-    # Создаем ответ и устанавливаем защитную куку на 24 часа (86400 секунд)
-    response = make_response(reviews_page())
-    response.set_cookie('review_sent', 'true', max_age=86400)
+    # Жёсткая проверка по нику за последние 24 часа
+    for rev in REVIEWS_LIST:
+        if rev.get("username", "").strip().lower() == clean_username:
+            try:
+                rev_time = datetime.strptime(rev.get("time", ""), "%Y-%m-%d %H:%M:%S")
+                if now - rev_time < timedelta(days=1):
+                    return f"<h3>⏳ Пользователь {username} уже оставлял отзыв за последние 24 часа!</h3><a href='/reviews'>Назад к отзывам</a>", 429
+            except:
+                pass
+
+    # Добавляем новый отзыв
+    new_review = {
+        "username": username,
+        "text": text,
+        "time": now.strftime("%Y-%m-%d %H:%M:%S")
+    }
+    REVIEWS_LIST.insert(0, new_review)
+    save_reviews(REVIEWS_LIST)
     
-    return response
+    return reviews_page()
 
 @app.route('/api/order', methods=['POST'])
 def api_order():

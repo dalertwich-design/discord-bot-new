@@ -20,7 +20,7 @@
     <!-- Форма для отправки отзыва -->
     <div class="form-box">
         <h3>Оставить отзыв</h3>
-        <form action="{{ url_for('add_review') }}" method="POST">
+        <form action="/add-review" method="POST">
             <label>Ваше имя / Discord:</label>
             <input type="text" name="username" placeholder="@username" required>
             <label>Ваш отзыв:</label>

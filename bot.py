@@ -228,7 +228,7 @@ REVIEWS_TEMPLATE = """
                     </svg>
                 </span>
                 <h3>⏳ Ограничение 1 минута</h3>
-                <p>Вы уже оставили отзыв. Страница автоматически обновится, когда пройдет 1 минута.</p>
+                <p>Вы уже оставили отзыв. Форма разблокируется через <b>60</b> сек.</p>
             </div>
         {% else %}
             <div class="form-container" style="text-align: left;" id="form-card">
@@ -327,10 +327,20 @@ REVIEWS_TEMPLATE = """
         {% endif %}
 
         {% if has_cooldown %}
-        // Автоматически обновляем страницу ровно через 60 секунд, когда кука истечет
-        setTimeout(function() {
-            window.location.reload();
-        }, 60000);
+        // Живой таймер обратного отсчета секунд
+        let timeLeft = 60;
+        const cooldownBox = document.querySelector('.cooldown-box p');
+        if (cooldownBox) {
+            const timerInterval = setInterval(function() {
+                timeLeft--;
+                if (timeLeft > 0) {
+                    cooldownBox.innerHTML = `Вы уже оставили отзыв. Форма разблокируется через <b>${timeLeft}</b> сек.`;
+                } else {
+                    clearInterval(timerInterval);
+                    window.location.reload();
+                }
+            }, 1000);
+        }
         {% endif %}
     </script>
 </body>

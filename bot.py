@@ -142,7 +142,6 @@ REVIEWS_TEMPLATE = """
             transform: translateX(-50%);
         }
 
-        /* Кастомизированный лоадер из печенек (на базе вашего кода) */
         .loader-container {
             display: flex;
             justify-content: center;
@@ -232,7 +231,6 @@ REVIEWS_TEMPLATE = """
                 <p>Вы уже оставили отзыв. Следующий отзыв можно будет написать через 1 минуту.</p>
             </div>
         {% else %}
-            <!-- Блок формы -->
             <div class="form-container" style="text-align: left;" id="form-card">
                 <span class="cookie-icon-top">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" height="46" width="65">
@@ -249,7 +247,6 @@ REVIEWS_TEMPLATE = """
                     </div>
                 {% endif %}
                 
-                <!-- Реальная форма -->
                 <form id="review-form" action="/add-review" method="POST" onsubmit="handleLoadingSubmit(event)">
                     <label for="username" style="color: #4a3525; font-weight: 600;">Ваше имя / Discord:</label>
                     <input type="text" id="username" name="username" placeholder="@username" required>
@@ -258,7 +255,6 @@ REVIEWS_TEMPLATE = """
                     <button type="submit">Отправить отзыв</button>
                 </form>
 
-                <!-- Красивый лоадер с печеньками (скрыт по умолчанию) -->
                 <div id="cookie-loader-box" class="hidden loader-container">
                     <div class="loader">
                         <div id="pegtopone">
@@ -318,12 +314,8 @@ REVIEWS_TEMPLATE = """
         function handleLoadingSubmit(event) {
             event.preventDefault();
             const form = event.target;
-            
-            // Скрываем саму форму, показываем кастомный лоадер с печеньками
             form.classList.add('hidden');
             document.getElementById('cookie-loader-box').classList.remove('hidden');
-            
-            // Задержка ровно 1 секунда для красоты, затем отправка
             setTimeout(() => {
                 form.submit();
             }, 1000);
@@ -341,21 +333,29 @@ REVIEWS_TEMPLATE = """
 @app.route('/reviews')
 def reviews_page():
     has_cooldown = request.cookies.get('review_sent') is not None
-    return render_template_string(REVIEWS_TEMPLATE, reviews=REVIEWS_LIST, has_cooldown=has_cooldown)
+    resp = make_response(render_template_string(REVIEWS_TEMPLATE, reviews=REVIEWS_LIST, has_cooldown=has_cooldown))
+    resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    return resp
 
 @app.route('/add-review', methods=['POST'])
 def add_review():
     if request.cookies.get('review_sent'):
-        return render_template_string(REVIEWS_TEMPLATE, reviews=REVIEWS_LIST, has_cooldown=True, error="⏳ Действует ограничение 1 минута!")
+        resp = make_response(render_template_string(REVIEWS_TEMPLATE, reviews=REVIEWS_LIST, has_cooldown=True, error="⏳ Действует ограничение 1 минута!"))
+        resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        return resp
 
     username = request.form.get('username')
     text = request.form.get('text')
     
     if not username or not text:
-        return render_template_string(REVIEWS_TEMPLATE, reviews=REVIEWS_LIST, has_cooldown=False, error="Заполните все поля!")
+        resp = make_response(render_template_string(REVIEWS_TEMPLATE, reviews=REVIEWS_LIST, has_cooldown=False, error="Заполните все поля!"))
+        resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        return resp
     
     if len(text) < 3 or len(text) > 500:
-        return render_template_string(REVIEWS_TEMPLATE, reviews=REVIEWS_LIST, has_cooldown=False, error="Ошибка: Отзыв должен быть от 3 до 500 символов.")
+        resp = make_response(render_template_string(REVIEWS_TEMPLATE, reviews=REVIEWS_LIST, has_cooldown=False, error="Ошибка: Отзыв должен быть от 3 до 500 символов."))
+        resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        return resp
 
     now = datetime.now()
     new_review = {
@@ -367,8 +367,8 @@ def add_review():
     save_reviews(REVIEWS_LIST)
     
     response = make_response(render_template_string(REVIEWS_TEMPLATE, reviews=REVIEWS_LIST, has_cooldown=True))
-    # Установлено время жизни куки 60 секунд (1 минута)
     response.set_cookie('review_sent', 'true', max_age=60)
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
     return response
 
 @app.route('/api/order', methods=['POST'])

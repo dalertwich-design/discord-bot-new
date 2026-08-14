@@ -35,7 +35,7 @@ def save_reviews(reviews):
 
 REVIEWS_LIST = load_reviews()
 
-# Шаблон страницы: белый текст везде, песочный фон у блоков формы и карточек
+# Шаблон страницы: общий фон изменен на песочный, везде белый текст, добавлены печеньки сверху в блоки
 REVIEWS_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="ru">
@@ -45,7 +45,7 @@ REVIEWS_TEMPLATE = """
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
-            background-color: #0f172a;
+            background-color: #fdf8f2; /* Изменили общий фон страницы на песочный */
             color: #ffffff;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
@@ -60,26 +60,27 @@ REVIEWS_TEMPLATE = """
             position: absolute;
             top: 20px;
             right: 30px;
-            background-color: #1e293b;
-            border: 1px solid #334155;
+            background-color: #bc6c25;
+            border: 1px solid #a45c1f;
             padding: 8px 16px;
             border-radius: 12px;
             font-weight: bold;
             color: #ffffff;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             font-size: 14px;
         }
-        h1 { color: #ffffff; margin-bottom: 10px; margin-top: 20px; }
-        p.desc { color: #ffffff; margin-bottom: 25px; text-align: center; opacity: 0.9; }
+        h1 { color: #4a3525; margin-bottom: 10px; margin-top: 20px; }
+        p.desc { color: #6b5141; margin-bottom: 25px; text-align: center; }
+        
         .glass-radio-group {
-            --bg: rgba(255, 255, 255, 0.06);
-            --text: #ffffff;
+            --bg: rgba(188, 108, 37, 0.15);
+            --text: #4a3525;
             display: flex;
             position: relative;
             background: var(--bg);
             border-radius: 1rem;
-            backdrop-filter: blur(12px);
-            box-shadow: inset 1px 1px 4px rgba(255, 255, 255, 0.2), inset -1px -1px 6px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.15);
+            border: 1px solid #e7d4c0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
             overflow: hidden;
             width: fit-content;
             margin-bottom: 40px;
@@ -90,44 +91,43 @@ REVIEWS_TEMPLATE = """
             font-size: 14px; padding: 0.8rem 1.6rem; cursor: pointer; font-weight: 600; letter-spacing: 0.3px;
             color: var(--text); position: relative; z-index: 2; transition: color 0.3s ease-in-out;
         }
-        .glass-radio-group label:hover { color: #ffffff; opacity: 1; }
-        .glass-radio-group input:checked + label { color: #ffffff; }
+        .glass-radio-group label:hover { color: #2c1e13; }
+        .glass-radio-group input:checked + label { color: #2c1e13; }
         .glass-glider {
             position: absolute; top: 0; bottom: 0; width: calc(100% / 2); border-radius: 1rem; z-index: 1;
-            transition: transform 0.5s cubic-bezier(0.37, 1.95, 0.66, 0.56), background 0.4s ease-in-out, box-shadow 0.4s ease-in-out;
+            transition: transform 0.5s cubic-bezier(0.37, 1.95, 0.66, 0.56), background 0.4s ease-in-out;
         }
         #glass-write:checked ~ .glass-glider {
             transform: translateX(0%);
-            background: linear-gradient(135deg, #c0c0c055, #e0e0e0);
-            box-shadow: 0 0 18px rgba(192, 192, 192, 0.5), 0 0 10px rgba(255, 255, 255, 0.4) inset;
+            background: #e7d4c0;
         }
         #glass-reviews:checked ~ .glass-glider {
             transform: translateX(100%);
-            background: linear-gradient(135deg, #e7d4c055, #e7d4c0);
-            box-shadow: 0 0 18px rgba(231, 212, 192, 0.5), 0 0 10px rgba(255, 255, 255, 0.4) inset;
+            background: #e7d4c0;
         }
         .section-content { display: none; width: 100%; max-width: 600px; flex-direction: column; align-items: center; }
         .section-content.active { display: flex; }
         
-        /* Блоки формы и ограничения теперь с песочным фоном в стиле печеньки */
         .form-container, .cooldown-box {
-            background-color: #fdf8f2; 
+            background-color: #ffffff; 
             border: 1px solid #e7d4c0; 
-            padding: 25px; 
+            padding: 35px 25px 25px 25px; 
             border-radius: 16px;
             width: 100%; 
             margin-bottom: 20px; 
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); 
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); 
             box-sizing: border-box; 
             text-align: center;
             color: #4a3525;
+            position: relative;
+            margin-top: 35px; /* отступ для печеньки сверху */
         }
-        .cooldown-box h3 { color: #d97706; margin-top: 0; margin-bottom: 10px; }
+        .cooldown-box h3 { color: #d97706; margin-top: 10px; margin-bottom: 10px; }
         .cooldown-box p { color: #6b5141; margin: 0; }
         
         input, textarea {
             width: 100%; padding: 12px; margin-top: 8px; margin-bottom: 15px;
-            background-color: #ffffff; border: 1px solid #d4b59d; border-radius: 8px; color: #4a3525; box-sizing: border-box; text-align: left;
+            background-color: #fdf8f2; border: 1px solid #d4b59d; border-radius: 8px; color: #4a3525; box-sizing: border-box; text-align: left;
         }
         input::placeholder, textarea::placeholder { color: #a48c77; }
         
@@ -136,6 +136,14 @@ REVIEWS_TEMPLATE = """
             cursor: pointer; font-weight: bold; width: 100%; transition: background 0.2s;
         }
         button[type="submit"]:hover { background-color: #9a541c; }
+
+        /* Стиль для иконки печеньки сверху блоков */
+        .cookie-icon-top {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
     </style>
 </head>
 <body>
@@ -155,13 +163,33 @@ REVIEWS_TEMPLATE = """
     <div id="tab-write" class="section-content active">
         {% if has_cooldown %}
             <div class="cooldown-box">
+                <!-- Печенька сверху блока ограничения -->
+                <span class="cookie-icon-top">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" height="46" width="65">
+                        <path stroke="#000" fill="#EAB789" d="M49.157 15.69L44.58.655l-12.422 1.96L21.044.654l-8.499 2.615-6.538 5.23-4.576 9.153v11.114l4.576 8.5 7.846 5.23 10.46 1.96 7.845-2.614 9.153 2.615 11.768-2.615 7.846-7.846 1.96-5.884.655-7.191-7.846-1.308-6.537-3.922z"></path>
+                        <path fill="#9C6750" d="M32.286 3.749c-6.94 3.65-11.69 11.053-11.69 19.591 0 8.137 4.313 15.242 10.724 19.052a20.513 20.513 0 01-8.723 1.937c-11.598 0-21-9.626-21-21.5 0-11.875 9.402-21.5 21-21.5 3.495 0 6.79.874 9.689 2.42z" clip-rule="evenodd" fill-rule="evenodd"></path>
+                        <path fill="#634647" d="M64.472 20.305a.954.954 0 00-1.172-.824 4.508 4.508 0 01-3.958-.934.953.953 0 00-1.076-.11c-.46.252-.977.383-1.502.382a3.154 3.154 0 01-2.97-2.11.954.954 0 00-.833-.634 4.54 4.54 0 01-4.205-4.507c.002-.23.022-.46.06-.687a.952.952 0 00-.213-.767 3.497 3.497 0 01-.614-3.5.953.953 0 00-.382-1.138 3.522 3.522 0 01-1.5-3.992.951.951 0 00-.762-1.227A22.611 22.611 0 0032.3 2.16 22.41 22.41 0 0022.657.001a22.654 22.654 0 109.648 43.15 22.644 22.644 0 0032.167-22.847zM22.657 43.4a20.746 20.746 0 110-41.493c2.566-.004 5.11.473 7.501 1.407a22.64 22.64 0 00.003 38.682 20.6 20.6 0 01-7.504 1.404zm19.286 0a20.746 20.746 0 112.131-41.384 5.417 5.417 0 001.918 4.635 5.346 5.346 0 00-.133 1.182A5.441 5.441 0 0046.879 11a5.804 5.804 0 00-.028.568 6.456 6.456 0 005.38 6.345 5.053 5.053 0 006.378 2.472 6.412 6.412 0 004.05 1.12 20.768 20.768 0 01-20.716 21.897z"></path>
+                        <path fill="#644647" d="M54.962 34.3a17.719 17.719 0 01-2.602 2.378.954.954 0 001.14 1.53 19.637 19.637 0 002.884-2.634.955.955 0 00-1.422-1.274z"></path>
+                        <path stroke-width="1.8" stroke="#644647" fill="#845556" d="M44.5 32.829c-.512 0-1.574.215-2 .5-.426.284-.342.263-.537.736a2.59 2.59 0 104.98.99c0-.686-.458-1.241-.943-1.726-.485-.486-.814-.5-1.5-.5zm-30.916-2.5c-.296 0-.912.134-1.159.311-.246.177-.197.164-.31.459a1.725 1.725 0 00-.086.932c.058.312.2.6.41.825.21.226.477.38.768.442.291.062.593.03.867-.092s.508-.329.673-.594a1.7 1.7 0 00.253-.896c0-.428-.266-.774-.547-1.076-.281-.302-.471-.31-.869-.311zm17.805-11.375c-.143-.492-.647-1.451-1.04-1.78-.392-.33-.348-.255-.857-.31a2.588 2.588 0 10.441 5.06c.66-.194 1.064-.788 1.395-1.39.33-.601.252-.92.06-1.58zm-22 2c-.143-.492-.647-1.451-1.04-1.78-.391-.33-.347-.255-.856-.31a2.589 2.589 0 10.44 5.06c.66-.194 1.064-.788 1.395-1.39.33-.601.252-.92.06-1.58Z"></path>
+                    </svg>
+                </span>
                 <h3>⏳ Ограничение 24 часа</h3>
                 <p>Вы уже оставили отзыв. Следующий отзыв можно будет написать через 24 часа.</p>
             </div>
         {% else %}
             <div class="form-container" style="text-align: left;">
+                <!-- Печенька сверху формы -->
+                <span class="cookie-icon-top">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" height="46" width="65">
+                        <path stroke="#000" fill="#EAB789" d="M49.157 15.69L44.58.655l-12.422 1.96L21.044.654l-8.499 2.615-6.538 5.23-4.576 9.153v11.114l4.576 8.5 7.846 5.23 10.46 1.96 7.845-2.614 9.153 2.615 11.768-2.615 7.846-7.846 1.96-5.884.655-7.191-7.846-1.308-6.537-3.922z"></path>
+                        <path fill="#9C6750" d="M32.286 3.749c-6.94 3.65-11.69 11.053-11.69 19.591 0 8.137 4.313 15.242 10.724 19.052a20.513 20.513 0 01-8.723 1.937c-11.598 0-21-9.626-21-21.5 0-11.875 9.402-21.5 21-21.5 3.495 0 6.79.874 9.689 2.42z" clip-rule="evenodd" fill-rule="evenodd"></path>
+                        <path fill="#634647" d="M64.472 20.305a.954.954 0 00-1.172-.824 4.508 4.508 0 01-3.958-.934.953.953 0 00-1.076-.11c-.46.252-.977.383-1.502.382a3.154 3.154 0 01-2.97-2.11.954.954 0 00-.833-.634 4.54 4.54 0 01-4.205-4.507c.002-.23.022-.46.06-.687a.952.952 0 00-.213-.767 3.497 3.497 0 01-.614-3.5.953.953 0 00-.382-1.138 3.522 3.522 0 01-1.5-3.992.951.951 0 00-.762-1.227A22.611 22.611 0 0032.3 2.16 22.41 22.41 0 0022.657.001a22.654 22.654 0 109.648 43.15 22.644 22.644 0 0032.167-22.847zM22.657 43.4a20.746 20.746 0 110-41.493c2.566-.004 5.11.473 7.501 1.407a22.64 22.64 0 00.003 38.682 20.6 20.6 0 01-7.504 1.404zm19.286 0a20.746 20.746 0 112.131-41.384 5.417 5.417 0 001.918 4.635 5.346 5.346 0 00-.133 1.182A5.441 5.441 0 0046.879 11a5.804 5.804 0 00-.028.568 6.456 6.456 0 005.38 6.345 5.053 5.053 0 006.378 2.472 6.412 6.412 0 004.05 1.12 20.768 20.768 0 01-20.716 21.897z"></path>
+                        <path fill="#644647" d="M54.962 34.3a17.719 17.719 0 01-2.602 2.378.954.954 0 001.14 1.53 19.637 19.637 0 002.884-2.634.955.955 0 00-1.422-1.274z"></path>
+                        <path stroke-width="1.8" stroke="#644647" fill="#845556" d="M44.5 32.829c-.512 0-1.574.215-2 .5-.426.284-.342.263-.537.736a2.59 2.59 0 104.98.99c0-.686-.458-1.241-.943-1.726-.485-.486-.814-.5-1.5-.5zm-30.916-2.5c-.296 0-.912.134-1.159.311-.246.177-.197.164-.31.459a1.725 1.725 0 00-.086.932c.058.312.2.6.41.825.21.226.477.38.768.442.291.062.593.03.867-.092s.508-.329.673-.594a1.7 1.7 0 00.253-.896c0-.428-.266-.774-.547-1.076-.281-.302-.471-.31-.869-.311zm17.805-11.375c-.143-.492-.647-1.451-1.04-1.78-.392-.33-.348-.255-.857-.31a2.588 2.588 0 10.441 5.06c.66-.194 1.064-.788 1.395-1.39.33-.601.252-.92.06-1.58zm-22 2c-.143-.492-.647-1.451-1.04-1.78-.391-.33-.347-.255-.856-.31a2.589 2.589 0 10.44 5.06c.66-.194 1.064-.788 1.395-1.39.33-.601.252-.92.06-1.58Z"></path>
+                    </svg>
+                </span>
                 {% if error %}
-                    <div style="background-color: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #b91c1c; padding: 12px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-weight: bold;">
+                    <div style="background-color: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #b91c1c; padding: 12px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-weight: bold;">
                         {{ error }}
                     </div>
                 {% endif %}
@@ -176,10 +204,10 @@ REVIEWS_TEMPLATE = """
         {% endif %}
     </div>
 
-    <!-- Секция 2: Список отзывов (карточки с цветом печеньки) -->
+    <!-- Секция 2: Список отзывов (карточки с печенькой) -->
     <div id="tab-reviews" class="section-content" style="gap: 40px; margin-top: 40px;">
         {% for review in reviews %}
-        <div class="[--shadow:rgba(60,64,67,0.3)_0_1px_2px_0,rgba(60,64,67,0.15)_0_2px_6px_2px] w-4/5 h-auto rounded-2xl bg-[#fdf8f2] border border-[#e7d4c0] [box-shadow:var(--shadow)] max-w-[300px] text-[#4a3525]">
+        <div class="[--shadow:rgba(60,64,67,0.1)_0_1px_2px_0,rgba(60,64,67,0.05)_0_2px_6px_2px] w-4/5 h-auto rounded-2xl bg-[#ffffff] border border-[#e7d4c0] [box-shadow:var(--shadow)] max-w-[300px] text-[#4a3525]">
             <div class="flex flex-col items-center justify-between pt-9 px-6 pb-6 relative">
                 <!-- Иконка печеньки сверху -->
                 <span class="relative mx-auto -mt-16 mb-6">

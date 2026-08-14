@@ -7,20 +7,36 @@
         body { font-family: Arial, sans-serif; background-color: #0f172a; color: #fff; padding: 40px; text-align: center; }
         .review-card { background: #1e293b; padding: 20px; margin: 15px auto; max-width: 600px; border-radius: 10px; text-align: left; }
         h1 { color: #a855f7; }
+        .form-box { background: #1e293b; padding: 20px; margin: 30px auto; max-width: 600px; border-radius: 10px; text-align: left; }
+        input, textarea { width: 100%; padding: 10px; margin: 8px 0; background: #0f172a; border: 1px solid #334155; color: #fff; border-radius: 5px; box-sizing: border-box; }
+        button { background: #9333ea; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #7e22ce; }
     </style>
 </head>
 <body>
     <h1>⭐ Отзывы наших клиентов</h1>
-    <p>Здесь вы можете почитать реальные отзывы покупателей Art Shop.</p>
+    <p>Здесь вы можете почитать реальные отзывы покупателей Art Shop или оставить свой.</p>
 
-    <div class="review-card">
-        <h3>@daler</h3>
-        <p>Отличный магазин! Брал товар, всё пришло моментально, рекомендую!</p>
+    <!-- Форма для отправки отзыва -->
+    <div class="form-box">
+        <h3>Оставить отзыв</h3>
+        <form action="/add-review" method="POST">
+            <label>Ваше имя / Discord:</label>
+            <input type="text" name="username" placeholder="@username" required>
+            <label>Ваш отзыв:</label>
+            <textarea name="text" rows="3" placeholder="Напишите пару слов о магазине..." required></textarea>
+            <button type="submit">Отправить отзыв</button>
+        </form>
     </div>
 
-    <div class="review-card">
-        <h3>@user123</h3>
-        <p>Быстрая поддержка и честные цены. Буду брать еще.</p>
+    <!-- Список отзывов -->
+    <div id="reviews-list">
+        {% for review in reviews %}
+        <div class="review-card">
+            <h3>{{ review.username }}</h3>
+            <p>{{ review.text }}</p>
+        </div>
+        {% endfor %}
     </div>
 </body>
 </html>

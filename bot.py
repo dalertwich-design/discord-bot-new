@@ -13,9 +13,23 @@ app = Flask(__name__, template_folder='templates')
 def home():
     return render_template('index.html')
 
+# Список для хранения отзывов в памяти
+REVIEWS_LIST = [
+    {"username": "@daler", "text": "Отличный магазин! Брал товар, всё пришло моментально, рекомендую!"},
+    {"username": "@user123", "text": "Быстрая поддержка и честные цены. Буду брать еще."}
+]
+
 @app.route('/reviews')
 def reviews_page():
-    return render_template('reviews.html')
+    return render_template('reviews.html', reviews=REVIEWS_LIST)
+
+@app.route('/add-review', methods=['POST'])
+def add_review():
+    username = request.form.get('username')
+    text = request.form.get('text')
+    if username and text:
+        REVIEWS_LIST.insert(0, {"username": username, "text": text})
+    return reviews_page()
 
 @app.route('/api/order', methods=['POST'])
 def api_order():

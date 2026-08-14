@@ -203,15 +203,15 @@
     <div id="tab-write" class="section-content active">
         
         {% if has_cooldown %}
-        <!-- Блок ограничения с таймером -->
-        <div class="form-container cooldown-box" style="text-align: center; padding: 30px;">
+        <!-- Сообщение об ограничении без таймера -->
+        <div class="form-container" style="text-align: center; padding: 30px;">
             <p style="color: #cbd5e1; font-size: 16px; margin: 0;">
-                Вы уже оставили отзыв. Форма разблокируется через <b>60</b> сек.
+                Вы уже оставили отзыв. Пожалуйста, подождите немного перед отправкой следующего.
             </p>
         </div>
         {% else %}
         <!-- Обычная форма отправки -->
-        <div class="form-container" id="form-card">
+        <div class="form-container">
             {% if error %}
                 <div style="background-color: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #f87171; padding: 12px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-weight: bold;">
                     {{ error }}
@@ -258,26 +258,6 @@
         {% if error %}
             document.getElementById('glass-write').checked = true;
             switchTab('write');
-        {% endif %}
-
-        // Живой таймер с гарантированным обновлением статуса куки по окончании
-        {% if has_cooldown %}
-        let timeLeft = 60;
-        const cooldownWrapper = document.querySelector('.cooldown-box');
-        const cooldownText = cooldownWrapper ? cooldownWrapper.querySelector('p') : null;
-        
-        if (cooldownText) {
-            const timerInterval = setInterval(function() {
-                timeLeft--;
-                if (timeLeft > 0) {
-                    cooldownText.innerHTML = `Вы уже оставили отзыв. Форма разблокируется через <b>${timeLeft}</b> сек.`;
-                } else {
-                    clearInterval(timerInterval);
-                    // Перезагружаем страницу, чтобы сервер полностью очистил куку ограничения и заново отрисовал форму
-                    window.location.reload();
-                }
-            }, 1000);
-        }
         {% endif %}
     </script>
 

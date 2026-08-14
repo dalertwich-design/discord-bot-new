@@ -45,11 +45,11 @@ def add_review():
     text = request.form.get('text')
     
     if not username or not text:
-        return reviews_page()
+        return render_template('reviews.html', reviews=REVIEWS_LIST, error="Заполните все поля!")
     
     # Проверка длины текста (от 3 до 500 символов)
     if len(text) < 3 or len(text) > 500:
-        return "<h3>❌ Ошибка: Отзыв должен быть от 3 до 500 символов.</h3><a href='/reviews'>Назад к отзывам</a>", 400
+        return render_template('reviews.html', reviews=REVIEWS_LIST, error="Ошибка: Отзыв должен быть от 3 до 500 символов.")
 
     clean_username = username.strip().lower()
     now = datetime.now()
@@ -60,7 +60,7 @@ def add_review():
             try:
                 rev_time = datetime.strptime(rev.get("time", ""), "%Y-%m-%d %H:%M:%S")
                 if now - rev_time < timedelta(days=1):
-                    return f"<h3>⏳ Пользователь {username} уже оставлял отзыв за последние 24 часа!</h3><a href='/reviews'>Назад к отзывам</a>", 429
+                    return render_template('reviews.html', reviews=REVIEWS_LIST, error=f"⏳ Пользователь {username} уже оставлял отзыв за последние 24 часа!")
             except:
                 pass
 
@@ -73,7 +73,7 @@ def add_review():
     REVIEWS_LIST.insert(0, new_review)
     save_reviews(REVIEWS_LIST)
     
-    return reviews_page()
+    return render_template('reviews.html', reviews=REVIEWS_LIST)
 
 @app.route('/api/order', methods=['POST'])
 def api_order():

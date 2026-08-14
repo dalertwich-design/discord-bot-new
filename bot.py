@@ -1,10 +1,10 @@
 import os
 import asyncio
-from datetime import datetime, timedelta
+from datetime import datetime
 import discord
 from discord.ext import commands
 from discord.ui import View, Button, Select
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, make_response
 from threading import Thread
 
 app = Flask(__name__, template_folder='templates')
@@ -19,9 +19,6 @@ REVIEWS_LIST = [
     {"username": "@user123", "text": "Быстрая поддержка и честные цены. Буду брать еще."}
 ]
 
-# Словарь для защиты от спама по IP: {ip_address: datetime}
-USER_COOLDOWNS = {}
-
 @app.route('/reviews')
 def reviews_page():
     return render_template('reviews.html', reviews=REVIEWS_LIST)
@@ -34,27 +31,22 @@ def add_review():
     if not username or not text:
         return reviews_page()
     
+    # Проверка: если у пользователя есть кука отправленного отзыва, блокируем спам
+    if request.cookies.get('review_sent'):
+        return "<h3>⏳ Вы уже оставили отзыв. Следующий отзыв можно будет написать через 24 часа!</h3><a href='/reviews'>Назад к отзывам</a>", 429
+
     # Проверка длины текста (от 3 до 500 символов)
     if len(text) < 3 or len(text) > 500:
         return "<h3>❌ Ошибка: Отзыв должен быть от 3 до 500 символов.</h3><a href='/reviews'>Назад к отзывам</a>", 400
 
-    # Получаем IP-адрес пользователя для защиты от спама
-    user_ip = request.remote_addr
-    now = datetime.now()
-
-    # Проверка лимита: 1 отзыв в сутки
-    if user_ip in USER_COOLDOWNS:
-        last_time = USER_COOLDOWNS[user_ip]
-        if now - last_time < timedelta(days=1):
-            timeLeft = timedelta(days=1) - (now - last_time)
-            hours_left = int(timeLeft.total_seconds() // 3600)
-            return f"<h3>⏳ Вы уже оставили отзыв. Следующий отзыв можно будет написать через {hours_left} ч.</h3><a href='/reviews'>Назад к отзывам</a>", 429
-
-    # Сохраняем время отправки и добавляем отзыв
-    USER_COOLDOWNS[user_ip] = now
+    # Добавляем отзыв в список
     REVIEWS_LIST.insert(0, {"username": username, "text": text})
+
+    # Создаем ответ и устанавливаем защитную куку на 24 часа (86400 секунд)
+    response = make_response(reviews_page())
+    response.set_cookie('review_sent', 'true', max_age=86400)
     
-    return reviews_page()
+    return response
 
 @app.route('/api/order', methods=['POST'])
 def api_order():

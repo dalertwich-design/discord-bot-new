@@ -87,7 +87,6 @@ REVIEWS_TEMPLATE = """
         h1 { color: #4a3525; margin-bottom: 10px; margin-top: 20px; }
         p.desc { color: #6b5141; margin-bottom: 25px; text-align: center; }
         
-        /* Стили для звезд */
         .rating-container {
             display: flex;
             flex-direction: column;
@@ -96,7 +95,7 @@ REVIEWS_TEMPLATE = """
         }
         .rating {
             display: flex;
-            flex-direction: row-reverse;
+            flex-direction: row;
             gap: 0.3rem;
             --stroke: #666;
             --fill: #ffc73a;
@@ -122,12 +121,26 @@ REVIEWS_TEMPLATE = """
         @keyframes idle {
             from { stroke-dashoffset: 24; }
         }
-        .rating label:hover svg {
+        .rating label:hover svg,
+        .rating label:hover ~ label svg,
+        .rating input:checked ~ label svg {
+            fill: var(--fill);
             stroke: var(--fill);
+        }
+        /* Подсветка звезд при выборе слева направо */
+        .rating input:checked + label svg,
+        .rating input:checked ~ label svg {
+            fill: var(--fill);
+            stroke: var(--fill);
+        }
+        /* Исправление порядка заполнения для стандартного выбора */
+        .rating {
+            display: flex;
+            flex-direction: row-reverse;
         }
         .rating input:checked ~ label svg {
             transition: 0s;
-            animation: idle 4s linear infinite, yippee 0.75s backwards;
+            animation: yippee 0.75s backwards;
             fill: var(--fill);
             stroke: var(--fill);
             stroke-opacity: 0;
@@ -216,19 +229,9 @@ REVIEWS_TEMPLATE = """
             box-shadow: 0 4px 6px rgba(0,0,0,0.03);
             color: #4a3525;
         }
-        .stats-emoji {
-            font-size: 3rem;
-        }
-        .stats-info h3 {
-            margin: 0;
-            font-size: 18px;
-            font-weight: bold;
-        }
-        .stats-info p {
-            margin: 3px 0 0 0;
-            font-size: 14px;
-            color: #7c5c43;
-        }
+        .stats-emoji { font-size: 3rem; }
+        .stats-info h3 { margin: 0; font-size: 18px; font-weight: bold; }
+        .stats-info p { margin: 3px 0 0 0; font-size: 14px; color: #7c5c43; }
 
         .loader-container {
             display: flex; justify-content: center; align-items: center; height: 120px; position: relative; width: 100%;
@@ -287,16 +290,16 @@ REVIEWS_TEMPLATE = """
                 <label style="font-weight: 600; display: block; text-align: center; margin-bottom: 5px;">Ваша оценка:</label>
                 <div class="rating-container">
                     <div class="rating">
-                        <input type="radio" id="star-5" name="rating" value="5" checked />
-                        <label for="star-5"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg></label>
-                        <input type="radio" id="star-4" name="rating" value="4" />
-                        <label for="star-4"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg></label>
-                        <input type="radio" id="star-3" name="rating" value="3" />
-                        <label for="star-3"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg></label>
-                        <input type="radio" id="star-2" name="rating" value="2" />
-                        <label for="star-2"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg></label>
                         <input type="radio" id="star-1" name="rating" value="1" />
                         <label for="star-1"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg></label>
+                        <input type="radio" id="star-2" name="rating" value="2" />
+                        <label for="star-2"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg></label>
+                        <input type="radio" id="star-3" name="rating" value="3" />
+                        <label for="star-3"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg></label>
+                        <input type="radio" id="star-4" name="rating" value="4" />
+                        <label for="star-4"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg></label>
+                        <input type="radio" id="star-5" name="rating" value="5" checked />
+                        <label for="star-5"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg></label>
                     </div>
                 </div>
 
@@ -360,7 +363,6 @@ REVIEWS_TEMPLATE = """
                     </svg>
                 </span>
                 
-                <!-- Отображение звезд в карточке -->
                 <div style="display: flex; gap: 3px; margin-bottom: 8px;">
                     {% for i in range(1, 6) %}
                         {% if i <= review.rating|int %}
@@ -468,7 +470,6 @@ def add_review():
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
     return response
 
-# Ниже идет неизменная часть бота (интерактивные кнопки, тикеты, генерация кодов)
 @app.route('/api/order', methods=['POST'])
 def api_order():
     try:

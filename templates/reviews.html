@@ -13,25 +13,135 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            position: relative;
         }
+
+        /* Счетчик отзывов в правом верхнем углу */
+        .review-counter {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            background-color: #1e293b;
+            border: 1px solid #334155;
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-weight: bold;
+            color: #c084fc;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            font-size: 14px;
+        }
+
         h1 {
             color: #c084fc;
             margin-bottom: 10px;
+            margin-top: 20px;
         }
         p.desc {
             color: #94a3b8;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
             text-align: center;
         }
+
+        /* Стили для кастомного переключателя (Uiverse) */
+        .glass-radio-group {
+            --bg: rgba(255, 255, 255, 0.06);
+            --text: #e5e5e5;
+            display: flex;
+            position: relative;
+            background: var(--bg);
+            border-radius: 1rem;
+            backdrop-filter: blur(12px);
+            box-shadow:
+                inset 1px 1px 4px rgba(255, 255, 255, 0.2),
+                inset -1px -1px 6px rgba(0, 0, 0, 0.3),
+                0 4px 12px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            width: fit-content;
+            margin-bottom: 30px;
+        }
+
+        .glass-radio-group input {
+            display: none;
+        }
+
+        .glass-radio-group label {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 100px;
+            font-size: 14px;
+            padding: 0.8rem 1.6rem;
+            cursor: pointer;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            color: var(--text);
+            position: relative;
+            z-index: 2;
+            transition: color 0.3s ease-in-out;
+        }
+
+        .glass-radio-group label:hover {
+            color: white;
+        }
+
+        .glass-radio-group input:checked + label {
+            color: #fff;
+        }
+
+        .glass-glider {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: calc(100% / 2); /* Изменено под 2 элемента */
+            border-radius: 1rem;
+            z-index: 1;
+            transition:
+                transform 0.5s cubic-bezier(0.37, 1.95, 0.66, 0.56),
+                background 0.4s ease-in-out,
+                box-shadow 0.4s ease-in-out;
+        }
+
+        /* Write (Silver стиль) */
+        #glass-write:checked ~ .glass-glider {
+            transform: translateX(0%);
+            background: linear-gradient(135deg, #c0c0c055, #e0e0e0);
+            box-shadow:
+                0 0 18px rgba(192, 192, 192, 0.5),
+                0 0 10px rgba(255, 255, 255, 0.4) inset;
+        }
+
+        /* Reviews (Gold стиль) */
+        #glass-reviews:checked ~ .glass-glider {
+            transform: translateX(100%);
+            background: linear-gradient(135deg, #ffd70055, #ffcc00);
+            box-shadow:
+                0 0 18px rgba(255, 215, 0, 0.5),
+                0 0 10px rgba(255, 235, 150, 0.4) inset;
+        }
+
+        /* Контейнеры секций */
+        .section-content {
+            display: none;
+            width: 100%;
+            max-width: 600px;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .section-content.active {
+            display: flex;
+        }
+
         .form-container, .review-card {
             background-color: #1e293b;
             border: 1px solid #334155;
             padding: 20px;
             border-radius: 12px;
             width: 100%;
-            max-width: 600px;
             margin-bottom: 20px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            box-sizing: border-box;
         }
         input, textarea {
             width: 100%;
@@ -44,7 +154,7 @@
             color: #fff;
             box-sizing: border-box;
         }
-        button {
+        button[type="submit"] {
             background-color: #9333ea;
             color: white;
             padding: 12px 20px;
@@ -55,7 +165,7 @@
             width: 100%;
             transition: background 0.2s;
         }
-        button:hover {
+        button[type="submit"]:hover {
             background-color: #7e22ce;
         }
         .review-card h3 {
@@ -70,35 +180,74 @@
 </head>
 <body>
 
-    <h1>⭐ Отзывы наших клиентов</h1>
-    <p class="desc">Здесь вы можете почитать реальные отзывы покупателей Art Shop или оставить свой.</p>
-
-    <div class="form-container">
-        <!-- Блок для вывода ошибок -->
-        {% if error %}
-            <div style="background-color: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #f87171; padding: 12px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-weight: bold;">
-                {{ error }}
-            </div>
-        {% endif %}
-
-        <form action="/add-review" method="POST">
-            <label for="username">Ваше имя / Discord:</label>
-            <input type="text" id="username" name="username" placeholder="@username" required>
-
-            <label for="text">Ваш отзыв:</label>
-            <textarea id="text" name="text" rows="4" placeholder="Напишите пару слов о магазине..." required></textarea>
-
-            <button type="submit">Отправить отзыв</button>
-        </form>
+    <!-- Счетчик отзывов справа сверху -->
+    <div class="review-counter">
+        💬 Отзывов: <span id="review-count-num">{{ reviews|length }}</span>
     </div>
 
-    <!-- Список отзывов -->
-    {% for review in reviews %}
-        <div class="review-card">
-            <h3>{{ review.username }}</h3>
-            <p>{{ review.text }}</p>
+    <h1>⭐ Отзывы наших клиентов</h1>
+    <p class="desc">Поделитесь своим мнением о магазине или почитайте другие отзывы.</p>
+
+    <!-- Переключатель (Write / Reviews) -->
+    <div class="glass-radio-group">
+        <input type="radio" name="glass-nav" id="glass-write" checked onchange="switchTab('write')">
+        <label for="glass-write">Write</label>
+
+        <input type="radio" name="glass-nav" id="glass-reviews" onchange="switchTab('reviews')">
+        <label for="glass-reviews">Reviews</label>
+
+        <div class="glass-glider"></div>
+    </div>
+
+    <!-- Секция 1: Написать отзыв -->
+    <div id="tab-write" class="section-content active">
+        <div class="form-container">
+            {% if error %}
+                <div style="background-color: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #f87171; padding: 12px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-weight: bold;">
+                    {{ error }}
+                </div>
+            {% endif %}
+
+            <form action="/add-review" method="POST">
+                <label for="username">Ваше имя / Discord:</label>
+                <input type="text" id="username" name="username" placeholder="@username" required>
+
+                <label for="text">Ваш отзыв:</label>
+                <textarea id="text" name="text" rows="4" placeholder="Напишите пару слов о магазине..." required></textarea>
+
+                <button type="submit">Отправить отзыв</button>
+            </form>
         </div>
-    {% endfor %}
+    </div>
+
+    <!-- Секция 2: Список отзывов -->
+    <div id="tab-reviews" class="section-content">
+        {% for review in reviews %}
+            <div class="review-card">
+                <h3>{{ review.username }}</h3>
+                <p>{{ review.text }}</p>
+            </div>
+        {% endfor %}
+    </div>
+
+    <script>
+        function switchTab(tabName) {
+            document.getElementById('tab-write').classList.remove('active');
+            document.getElementById('tab-reviews').classList.remove('active');
+
+            if (tabName === 'write') {
+                document.getElementById('tab-write').classList.add('active');
+            } else {
+                document.getElementById('tab-reviews').classList.add('active');
+            }
+        }
+
+        // Если с сервера пришла ошибка, автоматически открываем вкладку Write, чтобы пользователь её увидел
+        {% if error %}
+            document.getElementById('glass-write').checked = true;
+            switchTab('write');
+        {% endif %}
+    </script>
 
 </body>
 </html>

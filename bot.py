@@ -49,13 +49,22 @@ class InfoView(View):
     def __init__(self):
         super().__init__(timeout=None)
 
+    @discord.ui.button(label="Заказать", style=discord.ButtonStyle.green, custom_id="btn_order")
+    async def order_button(self, interaction: discord.Interaction, button: Button):
+        await create_ticket(interaction, "Оформление заказа")
+
+    @discord.ui.button(label="Товары", style=discord.ButtonStyle.primary, custom_id="btn_products")
+    async def products_button(self, interaction: discord.Interaction, button: Button):
+        await interaction.response.send_message("Выберите категорию товаров:", view=CategorySelectView(), ephemeral=True)
+
+    @discord.ui.button(label="Отзывы", style=discord.ButtonStyle.blurple, custom_id="btn_reviews")
+    async def reviews_button(self, interaction: discord.Interaction, button: Button):
+        # Здесь укажите ссылку на ваш канал с отзывами или текст
+        await interaction.response.send_message("⭐ Почитать отзывы или оставить свой можно в специальном канале: #отзывы", ephemeral=True)
+
     @discord.ui.button(label="Админ", style=discord.ButtonStyle.secondary, custom_id="btn_admin")
     async def admin_button(self, interaction: discord.Interaction, button: Button):
         await create_ticket(interaction, "Обращение к администрации")
-
-    @discord.ui.button(label="Товары", style=discord.ButtonStyle.success, custom_id="btn_products")
-    async def products_button(self, interaction: discord.Interaction, button: Button):
-        await interaction.response.send_message("Выберите категорию товаров:", view=CategorySelectView(), ephemeral=True)
 
 class CategorySelectView(View):
     def __init__(self):

@@ -260,7 +260,7 @@
             switchTab('write');
         {% endif %}
 
-        // Живой таймер обратного отсчета без перезагрузок
+        // Живой таймер с гарантированным обновлением статуса куки по окончании
         {% if has_cooldown %}
         let timeLeft = 60;
         const cooldownWrapper = document.querySelector('.cooldown-box');
@@ -273,30 +273,8 @@
                     cooldownText.innerHTML = `Вы уже оставили отзыв. Форма разблокируется через <b>${timeLeft}</b> сек.`;
                 } else {
                     clearInterval(timerInterval);
-                    
-                    // Скрываем блок таймера
-                    if (cooldownWrapper) {
-                        cooldownWrapper.style.display = 'none';
-                    }
-                    
-                    // Возвращаем форму обратно на страницу
-                    const tabWrite = document.getElementById('tab-write');
-                    if (tabWrite && !document.getElementById('form-card')) {
-                        const newFormHTML = `
-                            <div class="form-container" id="form-card">
-                                <form action="/add-review" method="POST">
-                                    <label for="username">Ваше имя / Discord:</label>
-                                    <input type="text" id="username" name="username" placeholder="@username" required>
-
-                                    <label for="text">Ваш отзыв:</label>
-                                    <textarea id="text" name="text" rows="4" placeholder="Напишите пару слов о магазине..." required></textarea>
-
-                                    <button type="submit">Отправить отзыв</button>
-                                </form>
-                            </div>
-                        `;
-                        tabWrite.insertAdjacentHTML('beforeend', newFormHTML);
-                    }
+                    // Перезагружаем страницу, чтобы сервер полностью очистил куку ограничения и заново отрисовал форму
+                    window.location.reload();
                 }
             }, 1000);
         }

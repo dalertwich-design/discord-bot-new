@@ -153,8 +153,55 @@ SITE_TEMPLATE = """
         button[type="submit"] {
             background-color: #bc6c25; color: white; padding: 12px 20px; border: none; border-radius: 8px;
             cursor: pointer; font-weight: bold; width: 100%; transition: background 0.2s;
+            position: relative; min-height: 45px; display: flex; align-items: center; justify-content: center;
         }
         button[type="submit"]:hover { background-color: #9a541c; }
+
+        /* Анимация загрузки (печеньки) */
+        .loader {
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 24px;
+        }
+
+        .cookie-icon {
+            opacity: 0;
+            fill: #fdf8f2;
+            animation: loader 2s infinite alternate;
+            width: 24px;
+            height: 24px;
+        }
+
+        .cookie2 {
+            width: 20px;
+            height: 20px;
+            margin-left: -8px;
+            animation-delay: 0.25s;
+        }
+
+        .cookie3 {
+            width: 16px;
+            height: 16px;
+            margin-left: -12px;
+            animation-delay: 0.5s;
+        }
+
+        @keyframes loader {
+            0% {
+                opacity: 0;
+                transform: translateY(0) translateX(30px) rotate(0deg);
+            }
+            10% {
+                opacity: 0;
+                transform: translateY(0) translateX(30px) rotate(0deg);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(-10px) translateX(0) rotate(360deg);
+            }
+        }
 
         .stats-banner {
             background: #ffffff;
@@ -216,7 +263,6 @@ SITE_TEMPLATE = """
             background-color: rgb(255, 255, 255); transform: rotate(45deg); left: -4px;
         }
 
-        /* Состояние активного лайка */
         .Btn.liked .leftContainer { background-color: rgb(238, 0, 0); }
         .Btn.liked .likeCount { color: rgb(238, 0, 0); }
         .Btn:not(.liked):hover .leftContainer { background-color: rgb(219, 0, 0); }
@@ -251,7 +297,7 @@ SITE_TEMPLATE = """
                 </div>
             {% endif %}
             
-            <form action="/add-review" method="POST">
+            <form action="/add-review" method="POST" id="review-form" onsubmit="handleReviewSubmit(event)">
                 <input type="hidden" name="active_tab" value="write">
                 <label style="font-weight: 600;">Ваше имя / Discord:</label>
                 <input type="text" name="username" placeholder="@username" required>
@@ -272,7 +318,16 @@ SITE_TEMPLATE = """
 
                 <label style="font-weight: 600;">Ваш отзыв:</label>
                 <textarea name="text" rows="4" placeholder="Напишите пару слов о магазине..." required></textarea>
-                <button type="submit">Отправить отзыв</button>
+                
+                <button type="submit" id="submit-btn">
+                    <span id="btn-text">Отправить отзыв</span>
+                    <div id="btn-loader" class="loader hidden">
+                        <!-- Иконка печеньки вместо звезды -->
+                        <svg class="cookie-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.78L8 11.5c0 .55.45 1 1 1 .83 0 1.5-.67 1.5-1.5 0-.28-.08-.54-.21-.76l1.29-1.29c.4.15.82.25 1.25.25 2.76 0 5-2.24 5-5 0-.43-.1-.85-.25-1.25L17 5.5c.22.13.48.21.76.21.83 0 1.5-.67 1.5-1.5 0-.55-.45-1-1-1-.28 0-.54.08-.76.21L16.2 2.21C15.01 2.07 13.79 2 12.5 2 7.81 2 4 5.81 4 10.5c0 .65.08 1.28.22 1.88L6 10.6v1.4c0 3.31 2.69 6 6 6 1.48 0 2.84-.55 3.88-1.45l1.41 1.41C15.88 19.34 14.5 19.93 13 19.93zM7.5 8C7.22 8 7 7.78 7 7.5S7.22 7 7.5 7 8 7.22 8 7.5 7.78 8 7.5 8zm3 2c-.28 0-.5-.22-.5-.5s.22-.5.5-.5.5.22.5.5-.22.5-.5.5zm4-3c-.28 0-.5-.22-.5-.5s.22-.5.5-.5.5.22.5.5-.22.5-.5.5zm-3 7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm4-3c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1z"/></svg>
+                        <svg class="cookie-icon cookie2" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.78L8 11.5c0 .55.45 1 1 1 .83 0 1.5-.67 1.5-1.5 0-.28-.08-.54-.21-.76l1.29-1.29c.4.15.82.25 1.25.25 2.76 0 5-2.24 5-5 0-.43-.1-.85-.25-1.25L17 5.5c.22.13.48.21.76.21.83 0 1.5-.67 1.5-1.5 0-.55-.45-1-1-1-.28 0-.54.08-.76.21L16.2 2.21C15.01 2.07 13.79 2 12.5 2 7.81 2 4 5.81 4 10.5c0 .65.08 1.28.22 1.88L6 10.6v1.4c0 3.31 2.69 6 6 6 1.48 0 2.84-.55 3.88-1.45l1.41 1.41C15.88 19.34 14.5 19.93 13 19.93zM7.5 8C7.22 8 7 7.78 7 7.5S7.22 7 7.5 7 8 7.22 8 7.5 7.78 8 7.5 8zm3 2c-.28 0-.5-.22-.5-.5s.22-.5.5-.5.5.22.5.5-.22.5-.5.5zm4-3c-.28 0-.5-.22-.5-.5s.22-.5.5-.5.5.22.5.5-.22.5-.5.5zm-3 7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm4-3c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1z"/></svg>
+                        <svg class="cookie-icon cookie3" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.78L8 11.5c0 .55.45 1 1 1 .83 0 1.5-.67 1.5-1.5 0-.28-.08-.54-.21-.76l1.29-1.29c.4.15.82.25 1.25.25 2.76 0 5-2.24 5-5 0-.43-.1-.85-.25-1.25L17 5.5c.22.13.48.21.76.21.83 0 1.5-.67 1.5-1.5 0-.55-.45-1-1-1-.28 0-.54.08-.76.21L16.2 2.21C15.01 2.07 13.79 2 12.5 2 7.81 2 4 5.81 4 10.5c0 .65.08 1.28.22 1.88L6 10.6v1.4c0 3.31 2.69 6 6 6 1.48 0 2.84-.55 3.88-1.45l1.41 1.41C15.88 19.34 14.5 19.93 13 19.93zM7.5 8C7.22 8 7 7.78 7 7.5S7.22 7 7.5 7 8 7.22 8 7.5 7.78 8 7.5 8zm3 2c-.28 0-.5-.22-.5-.5s.22-.5.5-.5.5.22.5.5-.22.5-.5.5zm4-3c-.28 0-.5-.22-.5-.5s.22-.5.5-.5.5.22.5.5-.22.5-.5.5zm-3 7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm4-3c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1 z"/></svg>
+                    </div>
+                </button>
             </form>
         </div>
     </div>
@@ -325,7 +380,6 @@ SITE_TEMPLATE = """
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-            // Восстанавливаем визуальное состояние лайков из localStorage
             {% for review in reviews %}
                 if (localStorage.getItem('liked_review_{{ review.id }}') === 'true') {
                     const btn = document.getElementById('btn-like-{{ review.id }}');
@@ -343,6 +397,17 @@ SITE_TEMPLATE = """
             } else if (tabName === 'reviews') {
                 document.getElementById('tab-reviews').classList.add('active');
             }
+        }
+
+        function handleReviewSubmit(event) {
+            const btn = document.getElementById('submit-btn');
+            const btnText = document.getElementById('btn-text');
+            const btnLoader = document.getElementById('btn-loader');
+            
+            // Скрываем текст, показываем анимацию печенек и блокируем кнопку
+            btnText.classList.add('hidden');
+            btnLoader.classList.remove('hidden');
+            btn.style.pointerEvents = 'none';
         }
 
         function toggleLike(reviewId) {

@@ -23,12 +23,19 @@ def load_reviews():
     if os.path.exists(REVIEWS_FILE):
         try:
             with open(REVIEWS_FILE, 'r', encoding='utf-8') as f:
-                return json.load(f)
+                reviews = json.load(f)
+                # Проверяем, чтобы у каждого отзыва было поле likes и id
+                for idx, rev in enumerate(reviews):
+                    if 'likes' not in rev:
+                        rev['likes'] = 0
+                    if 'id' not in rev:
+                        rev['id'] = idx
+                return reviews
         except:
             pass
     return [
-        {"username": "@daler", "rating": 5, "text": "Отличный магазин! Брал товар, всё пришло моментально, рекомендую!", "time": "2026-08-14 12:00:00"},
-        {"username": "@user123", "rating": 4, "text": "Быстрая поддержка и честные цены. Буду брать еще.", "time": "2026-08-14 12:00:00"}
+        {"id": 0, "username": "@daler", "rating": 5, "text": "Отличный магазин! Брал товар, всё пришло моментально, рекомендую!", "time": "2026-08-14 12:00:00", "likes": 12},
+        {"id": 1, "username": "@user123", "rating": 4, "text": "Быстрая поддержка и честные цены. Буду брать еще.", "time": "2026-08-14 12:00:00", "likes": 5}
     ]
 
 def save_reviews(reviews):
@@ -185,6 +192,66 @@ REVIEWS_TEMPLATE = """
         .stats-info h3 { margin: 0; font-size: 18px; font-weight: bold; }
         .stats-info p { margin: 3px 0 0 0; font-size: 14px; color: #7c5c43; }
 
+        /* Стили для вашей кнопки лайка от Uiverse */
+        .Btn {
+            width: 120px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            border: none;
+            border-radius: 5px;
+            overflow: hidden;
+            box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.06);
+            cursor: pointer;
+            background-color: transparent;
+        }
+        .leftContainer {
+            width: 55%;
+            height: 100%;
+            background-color: rgb(238, 0, 0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .leftContainer .like {
+            color: white;
+            font-weight: 600;
+            font-size: 13px;
+        }
+        .likeCount {
+            width: 45%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgb(238, 0, 0);
+            font-weight: 600;
+            font-size: 13px;
+            position: relative;
+            background-color: white;
+        }
+        .likeCount::before {
+            height: 8px;
+            width: 8px;
+            position: absolute;
+            content: "";
+            background-color: rgb(255, 255, 255);
+            transform: rotate(45deg);
+            left: -4px;
+        }
+        .Btn:hover .leftContainer {
+            background-color: rgb(219, 0, 0);
+        }
+        .Btn:active .leftContainer {
+            background-color: rgb(201, 0, 0);
+        }
+        .Btn:active .leftContainer svg {
+            transform: scale(1.15);
+            transform-origin: top;
+        }
+
         .loader-container {
             display: flex; justify-content: center; align-items: center; height: 120px; position: relative; width: 100%;
         }
@@ -268,7 +335,6 @@ REVIEWS_TEMPLATE = """
     <!-- Секция 2: Список отзывов -->
     <div id="tab-reviews" class="section-content" style="gap: 25px; margin-top: 20px;">
         
-        <!-- Динамический стикер-баннер общей оценки -->
         {% set total_reviews = reviews|length %}
         {% set ns = namespace(total_score=0) %}
         {% for r in reviews %}
@@ -326,9 +392,25 @@ REVIEWS_TEMPLATE = """
                 <p class="w-full mb-4 text-sm text-justify text-[#6b5141]">
                     {{ review.text }}
                 </p>
-                <span class="text-xs text-[#a48c77] mr-auto mt-2">
-                    {{ review.time }}
-                </span>
+                
+                <div class="flex items-center justify-between w-full mt-2">
+                    <span class="text-xs text-[#a48c77]">
+                        {{ review.time }}
+                    </span>
+                    
+                    <!-- Ваша кнопка лайка из Uiverse, встроенная в карточку отзыва -->
+                    <button class="Btn" onclick="likeReview('{{ review.id }}')">
+                      <div class="leftContainer">
+                        <svg viewBox="0 0 512 512" width="16" height="16" xmlns="http://www.w3.org/2000/svg">
+                          <path fill="white" d="M462.3 62.6C407.5 15.9 326 24.3 275.7 76.2L256 96.5l-19.7-20.3C186.1 24.3 104.5 15.9 49.7 62.6c-62.8 53.6-66.1 149.8-9.9 207.6l193.5 199.8c6.2 6.4 14.4 9.7 22.6 9.7s16.4-3.2 22.6-9.7L472 270.2c56.4-57.8 53.1-154-9.7-207.6zm-15.1 190.3L256 445.9 64.8 252.9c-40.8-41.9-43.1-110.5-5.7-154.5 38.3-43.9 104.5-47.5 147.2-7.5l27.9 28.7 27.9-28.7c42.7-40 108.9-36.4 147.2 7.5 37.4 44 35.1 112.6-5.7 154.5z"/>
+                        </svg>
+                        <span class="like">Like</span>
+                      </div>
+                      <div class="likeCount" id="like-count-{{ review.id }}">
+                        {{ review.likes }}
+                      </div>
+                    </button>
+                </div>
             </div>
         </div>
         {% endfor %}
@@ -355,6 +437,22 @@ REVIEWS_TEMPLATE = """
             }, 1000);
         }
 
+        function likeReview(reviewId) {
+            fetch('/like-review/' + reviewId, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('like-count-' + reviewId).innerText = data.likes;
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
         {% if error %}
             document.getElementById('glass-write').checked = true;
             switchTab('write');
@@ -370,6 +468,17 @@ def reviews_page():
     resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
     return resp
 
+@app.route('/like-review/<int:review_id>', methods=['POST'])
+def like_review(review_id):
+    global REVIEWS_LIST
+    REVIEWS_LIST = load_reviews()
+    for review in REVIEWS_LIST:
+        if review.get('id') == review_id:
+            review['likes'] = review.get('likes', 0) + 1
+            save_reviews(REVIEWS_LIST)
+            return jsonify({"success": True, "likes": review['likes']})
+    return jsonify({"success": False}), 404
+
 @app.route('/add-review', methods=['POST'])
 def add_review():
     username = request.form.get('username')
@@ -377,6 +486,9 @@ def add_review():
     rating = request.form.get('rating', '5')
     text = request.form.get('text')
     
+    global REVIEWS_LIST
+    REVIEWS_LIST = load_reviews()
+
     if not username or not code or not text:
         resp = make_response(render_template_string(REVIEWS_TEMPLATE, reviews=REVIEWS_LIST, error="Заполните все поля!"))
         resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
@@ -404,11 +516,14 @@ def add_review():
     save_codes(PURCHASE_CODES)
 
     now = datetime.now()
+    new_id = max([r.get('id', 0) for r in REVIEWS_LIST], default=-1) + 1
     new_review = {
+        "id": new_id,
         "username": username,
         "rating": int(rating),
         "text": text,
-        "time": now.strftime("%Y-%m-%d %H:%M:%S")
+        "time": now.strftime("%Y-%m-%d %H:%M:%S"),
+        "likes": 0
     }
     REVIEWS_LIST.insert(0, new_review)
     save_reviews(REVIEWS_LIST)

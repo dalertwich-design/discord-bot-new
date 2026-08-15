@@ -7,7 +7,7 @@ from datetime import datetime
 import discord
 from discord.ext import commands
 from discord.ui import View, Button, Select
-from flask import Flask, render_template_string, request, make_response
+from flask import Flask, render_template_string, request, make_response, jsonify
 from threading import Thread
 
 app = Flask(__name__, template_folder='templates')
@@ -95,65 +95,17 @@ REVIEWS_TEMPLATE = """
         }
         .rating {
             display: flex;
-            flex-direction: row;
-            gap: 0.3rem;
-            --stroke: #666;
-            --fill: #ffc73a;
-        }
-        .rating input {
-            appearance: unset;
-            display: none;
-        }
-        .rating label {
-            cursor: pointer;
-        }
-        .rating svg {
-            width: 2rem;
-            height: 2rem;
-            overflow: visible;
-            fill: transparent;
-            stroke: var(--stroke);
-            stroke-linejoin: bevel;
-            stroke-dasharray: 12;
-            animation: idle 4s linear infinite;
-            transition: stroke 0.2s, fill 0.5s;
-        }
-        @keyframes idle {
-            from { stroke-dashoffset: 24; }
-        }
-        .rating label:hover svg,
-        .rating label:hover ~ label svg,
-        .rating input:checked ~ label svg {
-            fill: var(--fill);
-            stroke: var(--fill);
-        }
-        /* Подсветка звезд при выборе слева направо */
-        .rating input:checked + label svg,
-        .rating input:checked ~ label svg {
-            fill: var(--fill);
-            stroke: var(--fill);
-        }
-        /* Исправление порядка заполнения для стандартного выбора */
-        .rating {
-            display: flex;
             flex-direction: row-reverse;
+            justify-content: center;
+            gap: 5px;
+            margin: 10px 0 20px 0;
         }
-        .rating input:checked ~ label svg {
-            transition: 0s;
-            animation: yippee 0.75s backwards;
-            fill: var(--fill);
-            stroke: var(--fill);
-            stroke-opacity: 0;
-            stroke-dasharray: 0;
-            stroke-linejoin: miter;
-            stroke-width: 8px;
-        }
-        @keyframes yippee {
-            0% { transform: scale(1); fill: var(--fill); fill-opacity: 0; stroke-opacity: 1; stroke: var(--stroke); stroke-dasharray: 10; stroke-width: 1px; stroke-linejoin: bevel; }
-            30% { transform: scale(0); fill: var(--fill); fill-opacity: 0; stroke-opacity: 1; stroke: var(--stroke); stroke-dasharray: 10; stroke-width: 1px; stroke-linejoin: bevel; }
-            30.1% { stroke: var(--fill); stroke-dasharray: 0; stroke-linejoin: miter; stroke-width: 8px; }
-            60% { transform: scale(1.2); fill: var(--fill); }
-        }
+        .rating input { display: none; }
+        .rating label { cursor: pointer; color: #d1d5db; transition: color 0.2s; }
+        .rating input:checked ~ label,
+        .rating label:hover,
+        .rating label:hover ~ label { color: #f59e0b; }
+        .rating svg { width: 32px; height: 32px; fill: currentColor; }
 
         .glass-radio-group {
             --bg: rgba(188, 108, 37, 0.15);
@@ -290,16 +242,11 @@ REVIEWS_TEMPLATE = """
                 <label style="font-weight: 600; display: block; text-align: center; margin-bottom: 5px;">Ваша оценка:</label>
                 <div class="rating-container">
                     <div class="rating">
-                        <input type="radio" id="star-1" name="rating" value="1" />
-                        <label for="star-1"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg></label>
-                        <input type="radio" id="star-2" name="rating" value="2" />
-                        <label for="star-2"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg></label>
-                        <input type="radio" id="star-3" name="rating" value="3" />
-                        <label for="star-3"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg></label>
-                        <input type="radio" id="star-4" name="rating" value="4" />
-                        <label for="star-4"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg></label>
-                        <input type="radio" id="star-5" name="rating" value="5" checked />
-                        <label for="star-5"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg></label>
+                        <input type="radio" id="star5" name="rating" value="5"><label for="star5"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></label>
+                        <input type="radio" id="star4" name="rating" value="4"><label for="star4"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></label>
+                        <input type="radio" id="star3" name="rating" value="3"><label for="star3"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></label>
+                        <input type="radio" id="star2" name="rating" value="2"><label for="star2"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></label>
+                        <input type="radio" id="star1" name="rating" value="1" checked><label for="star1"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></label>
                     </div>
                 </div>
 

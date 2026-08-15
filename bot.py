@@ -24,7 +24,6 @@ def load_reviews():
         try:
             with open(REVIEWS_FILE, 'r', encoding='utf-8') as f:
                 reviews = json.load(f)
-                # Проверяем, чтобы у каждого отзыва было поле likes и id
                 for idx, rev in enumerate(reviews):
                     if 'likes' not in rev:
                         rev['likes'] = 0
@@ -58,17 +57,17 @@ def save_codes(codes):
 REVIEWS_LIST = load_reviews()
 PURCHASE_CODES = load_codes()
 
-REVIEWS_TEMPLATE = """
+SITE_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Отзывы — Art Shop</title>
+    <title>Art Shop — Отзывы</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
             background-color: #fdf8f2;
-            color: #ffffff;
+            color: #4a3525;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 40px 20px;
@@ -77,19 +76,6 @@ REVIEWS_TEMPLATE = """
             align-items: center;
             position: relative;
             min-height: 100vh;
-        }
-        .review-counter {
-            position: absolute;
-            top: 20px;
-            right: 30px;
-            background-color: #bc6c25;
-            border: 1px solid #a45c1f;
-            padding: 8px 16px;
-            border-radius: 12px;
-            font-weight: bold;
-            color: #ffffff;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            font-size: 14px;
         }
         h1 { color: #4a3525; margin-bottom: 10px; margin-top: 20px; }
         p.desc { color: #6b5141; margin-bottom: 25px; text-align: center; }
@@ -129,8 +115,8 @@ REVIEWS_TEMPLATE = """
         }
         .glass-radio-group input { display: none; }
         .glass-radio-group label {
-            flex: 1; display: flex; align-items: center; justify-content: center; min-width: 100px;
-            font-size: 14px; padding: 0.8rem 1.6rem; cursor: pointer; font-weight: 600; letter-spacing: 0.3px;
+            flex: 1; display: flex; align-items: center; justify-content: center; min-width: 140px;
+            font-size: 14px; padding: 0.8rem 1.2rem; cursor: pointer; font-weight: 600; letter-spacing: 0.3px;
             color: var(--text); position: relative; z-index: 2; transition: color 0.3s ease-in-out;
         }
         .glass-glider {
@@ -139,6 +125,7 @@ REVIEWS_TEMPLATE = """
         }
         #glass-write:checked ~ .glass-glider { transform: translateX(0%); background: #e7d4c0; }
         #glass-reviews:checked ~ .glass-glider { transform: translateX(100%); background: #e7d4c0; }
+
         .section-content { display: none; width: 100%; max-width: 600px; flex-direction: column; align-items: center; }
         .section-content.active { display: flex; }
         
@@ -154,7 +141,7 @@ REVIEWS_TEMPLATE = """
             text-align: left;
             color: #4a3525;
             position: relative;
-            margin-top: 35px;
+            margin-top: 15px;
         }
         
         input, textarea {
@@ -168,13 +155,6 @@ REVIEWS_TEMPLATE = """
             cursor: pointer; font-weight: bold; width: 100%; transition: background 0.2s;
         }
         button[type="submit"]:hover { background-color: #9a541c; }
-
-        .cookie-icon-top {
-            position: absolute;
-            top: -25px;
-            left: 50%;
-            transform: translateX(-50%);
-        }
 
         .stats-banner {
             background: #ffffff;
@@ -192,7 +172,6 @@ REVIEWS_TEMPLATE = """
         .stats-info h3 { margin: 0; font-size: 18px; font-weight: bold; }
         .stats-info p { margin: 3px 0 0 0; font-size: 14px; color: #7c5c43; }
 
-        /* Стили для вашей кнопки лайка от Uiverse */
         .Btn {
             width: 120px;
             height: 32px;
@@ -215,11 +194,7 @@ REVIEWS_TEMPLATE = """
             justify-content: center;
             gap: 6px;
         }
-        .leftContainer .like {
-            color: white;
-            font-weight: 600;
-            font-size: 13px;
-        }
+        .leftContainer .like { color: white; font-weight: 600; font-size: 13px; }
         .likeCount {
             width: 45%;
             height: 100%;
@@ -233,65 +208,32 @@ REVIEWS_TEMPLATE = """
             background-color: white;
         }
         .likeCount::before {
-            height: 8px;
-            width: 8px;
-            position: absolute;
-            content: "";
-            background-color: rgb(255, 255, 255);
-            transform: rotate(45deg);
-            left: -4px;
+            height: 8px; width: 8px; position: absolute; content: "";
+            background-color: rgb(255, 255, 255); transform: rotate(45deg); left: -4px;
         }
-        .Btn:hover .leftContainer {
-            background-color: rgb(219, 0, 0);
-        }
-        .Btn:active .leftContainer {
-            background-color: rgb(201, 0, 0);
-        }
-        .Btn:active .leftContainer svg {
-            transform: scale(1.15);
-            transform-origin: top;
-        }
-
-        .loader-container {
-            display: flex; justify-content: center; align-items: center; height: 120px; position: relative; width: 100%;
-        }
-        .loader {
-            --fill-color: #bc6c25; --shine-color: #bc6c2533; transform: scale(0.6); width: 100px; height: auto; position: relative; filter: drop-shadow(0 0 10px var(--shine-color));
-        }
-        .loader #pegtopone { position: absolute; animation: flowe-one 1s linear infinite; }
-        .loader #pegtoptwo { position: absolute; opacity: 0; transform: scale(0) translateY(-200px) translateX(-100px); animation: flowe-two 1s linear infinite; animation-delay: 0.3s; }
-        .loader #pegtopthree { position: absolute; opacity: 0; transform: scale(0) translateY(-200px) translateX(100px); animation: flowe-three 1s linear infinite; animation-delay: 0.6s; }
-        @keyframes flowe-one { 0% { transform: scale(0.5) translateY(-200px); opacity: 0; } 25% { transform: scale(0.75) translateY(-100px); opacity: 1; } 50% { transform: scale(1) translateY(0px); opacity: 1; } 75% { transform: scale(0.5) translateY(50px); opacity: 1; } 100% { transform: scale(0) translateY(100px); opacity: 0; } }
-        @keyframes flowe-two { 0% { transform: scale(0.5) rotateZ(-10deg) translateY(-200px) translateX(-100px); opacity: 0; } 25% { transform: scale(1) rotateZ(-5deg) translateY(-100px) translateX(-50px); opacity: 1; } 50% { transform: scale(1) rotateZ(0deg) translateY(0px) translateX(-25px); opacity: 1; } 75% { transform: scale(0.5) rotateZ(5deg) translateY(50px) translateX(0px); opacity: 1; } 100% { transform: scale(0) rotateZ(10deg) translateY(100px) translateX(25px); opacity: 0; } }
-        @keyframes flowe-three { 0% { transform: scale(0.5) rotateZ(10deg) translateY(-200px) translateX(100px); opacity: 0; } 25% { transform: scale(1) rotateZ(5deg) translateY(-100px) translateX(50px); opacity: 1; } 50% { transform: scale(1) rotateZ(0deg) translateY(0px) translateX(25px); opacity: 1; } 75% { transform: scale(0.5) rotateZ(-5deg) translateY(50px) translateX(0px); opacity: 1; } 100% { transform: scale(0.5) rotateZ(-10deg) translateY(100px) translateX(-25px); opacity: 0; } }
+        .Btn:hover .leftContainer { background-color: rgb(219, 0, 0); }
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
-    <div class="review-counter">💬 Отзывов: <span id="review-count-num">{{ reviews|length }}</span></div>
-    <h1>⭐ Отзывы наших клиентов</h1>
-    <p class="desc">Только реальные покупатели могут оставить отзыв, используя код подтверждения.</p>
+
+    <h1>⭐ Art Shop — Отзывы</h1>
+    <p class="desc">Оставляйте отзывы по кодам подтверждения покупок.</p>
 
     <div class="glass-radio-group">
-        <input type="radio" name="glass-nav" id="glass-write" checked onchange="switchTab('write')">
-        <label for="glass-write">Write</label>
-        <input type="radio" name="glass-nav" id="glass-reviews" onchange="switchTab('reviews')">
-        <label for="glass-reviews">Reviews</label>
+        <input type="radio" name="glass-nav" id="glass-write" {% if active_tab == 'write' %}checked{% endif %} onchange="switchTab('write')">
+        <label for="glass-write">Оставить отзыв</label>
+        
+        <input type="radio" name="glass-nav" id="glass-reviews" {% if active_tab == 'reviews' %}checked{% endif %} onchange="switchTab('reviews')">
+        <label for="glass-reviews">Список отзывов</label>
+
         <div class="glass-glider"></div>
     </div>
 
-    <!-- Секция 1: Написать отзыв -->
-    <div id="tab-write" class="section-content active">
-        <div class="form-container" id="form-card">
-            <span class="cookie-icon-top">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" height="46" width="65">
-                    <path stroke="#000" fill="#EAB789" d="M49.157 15.69L44.58.655l-12.422 1.96L21.044.654l-8.499 2.615-6.538 5.23-4.576 9.153v11.114l4.576 8.5 7.846 5.23 10.46 1.96 7.845-2.614 9.153 2.615 11.768-2.615 7.846-7.846 1.96-5.884.655-7.191-7.846-1.308-6.537-3.922z"></path>
-                    <path fill="#9C6750" d="M32.286 3.749c-6.94 3.65-11.69 11.053-11.69 19.591 0 8.137 4.313 15.242 10.724 19.052a20.513 20.513 0 01-8.723 1.937c-11.598 0-21-9.626-21-21.5 0-11.875 9.402-21.5 21-21.5 3.495 0 6.79.874 9.689 2.42z" clip-rule="evenodd" fill-rule="evenodd"></path>
-                    <path fill="#634647" d="M64.472 20.305a.954.954 0 00-1.172-.824 4.508 4.508 0 01-3.958-.934.953.953 0 00-1.076-.11c-.46.252-.977.383-1.502.382a3.154 3.154 0 01-2.97-2.11.954.954 0 00-.833-.634 4.54 4.54 0 01-4.205-4.507c.002-.23.022-.46.06-.687a.952.952 0 00-.213-.767 3.497 3.497 0 01-.614-3.5.953.953 0 00-.382-1.138 3.522 3.522 0 01-1.5-3.992.951.951 0 00-.762-1.227A22.611 22.611 0 0032.3 2.16 22.41 22.41 0 0022.657.001a22.654 22.654 0 109.648 43.15 22.644 22.644 0 0032.167-22.847zM22.657 43.4a20.746 20.746 0 110-41.493c2.566-.004 5.11.473 7.501 1.407a22.64 22.64 0 00.003 38.682 20.6 20.6 0 01-7.504 1.404zm19.286 0a20.746 20.746 0 112.131-41.384 5.417 5.417 0 001.918 4.635 5.346 5.346 0 00-.133 1.182A5.441 5.441 0 0046.879 11a5.804 5.804 0 00-.028.568 6.456 6.456 0 005.38 6.345 5.053 5.053 0 006.378 2.472 6.412 6.412 0 004.05 1.12 20.768 20.768 0 01-20.716 21.897z"></path>
-                    <path fill="#644647" d="M54.962 34.3a17.719 17.719 0 01-2.602 2.378.954.954 0 001.14 1.53 19.637 19.637 0 002.884-2.634.955.955 0 00-1.422-1.274z"></path>
-                    <path stroke-width="1.8" stroke="#644647" fill="#845556" d="M44.5 32.829c-.512 0-1.574.215-2 .5-.426.284-.342.263-.537.736a2.59 2.59 0 104.98.99c0-.686-.458-1.241-.943-1.726-.485-.486-.814-.5-1.5-.5zm-30.916-2.5c-.296 0-.912.134-1.159.311-.246.177-.197.164-.31.459a1.725 1.725 0 00-.086.932c.058.312.2.6.41.825.21.226.477.38.768.442.291.062.593.03.867-.092s.508-.329.673-.594a1.7 1.7 0 00.253-.896c0-.428-.266-.774-.547-1.076-.281-.302-.471-.31-.869-.311zm17.805-11.375c-.143-.492-.647-1.451-1.04-1.78-.392-.33-.348-.255-.857-.31a2.588 2.588 0 10.441 5.06c.66-.194 1.064-.788 1.395-1.39.33-.601.252-.92.06-1.58zm-22 2c-.143-.492-.647-1.451-1.04-1.78-.391-.33-.347-.255-.856-.31a2.589 2.589 0 10.44 5.06c.66-.194 1.064-.788 1.395-1.39.33-.601.252-.92.06-1.58Z"></path>
-                </svg>
-            </span>
+    <!-- ВКЛАДКА 1: Написать отзыв -->
+    <div id="tab-write" class="section-content {% if active_tab == 'write' %}active{% endif %}">
+        <div class="form-container">
+            <h3 style="margin-top: 0; font-weight: bold; color: #4a3525;">Оставить отзыв</h3>
             
             {% if error %}
                 <div style="background-color: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #b91c1c; padding: 12px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-weight: bold;">
@@ -299,12 +241,13 @@ REVIEWS_TEMPLATE = """
                 </div>
             {% endif %}
             
-            <form id="review-form" action="/add-review" method="POST" onsubmit="handleLoadingSubmit(event)">
-                <label for="username" style="font-weight: 600;">Ваше имя / Discord:</label>
-                <input type="text" id="username" name="username" placeholder="@username" required>
+            <form action="/add-review" method="POST">
+                <input type="hidden" name="active_tab" value="write">
+                <label style="font-weight: 600;">Ваше имя / Discord:</label>
+                <input type="text" name="username" placeholder="@username" required>
                 
-                <label for="code" style="font-weight: 600;">Код подтверждения покупки:</label>
-                <input type="text" id="code" name="code" placeholder="Например: REV-XXXX" required>
+                <label style="font-weight: 600;">Код подтверждения покупки:</label>
+                <input type="text" name="code" placeholder="Например: REV-XXXX" required>
 
                 <label style="font-weight: 600; display: block; text-align: center; margin-bottom: 5px;">Ваша оценка:</label>
                 <div class="rating-container">
@@ -317,23 +260,15 @@ REVIEWS_TEMPLATE = """
                     </div>
                 </div>
 
-                <label for="text" style="font-weight: 600;">Ваш отзыв:</label>
-                <textarea id="text" name="text" rows="4" placeholder="Напишите пару слов о магазине..." required></textarea>
+                <label style="font-weight: 600;">Ваш отзыв:</label>
+                <textarea name="text" rows="4" placeholder="Напишите пару слов о магазине..." required></textarea>
                 <button type="submit">Отправить отзыв</button>
             </form>
-
-            <div id="cookie-loader-box" class="hidden loader-container">
-                <div class="loader">
-                    <div id="pegtopone"><svg xmlns="http://www.w3.org/2000/svg" fill="none" height="46" width="65"><path fill="#bc6c25" d="M49.157 15.69L44.58.655l-12.422 1.96L21.044.654l-8.499 2.615-6.538 5.23-4.576 9.153v11.114l4.576 8.5 7.846 5.23 10.46 1.96 7.845-2.614 9.153 2.615 11.768-2.615 7.846-7.846 1.96-5.884.655-7.191-7.846-1.308-6.537-3.922z"></path></svg></div>
-                    <div id="pegtoptwo"><svg xmlns="http://www.w3.org/2000/svg" fill="none" height="46" width="65"><path fill="#bc6c25" d="M49.157 15.69L44.58.655l-12.422 1.96L21.044.654l-8.499 2.615-6.538 5.23-4.576 9.153v11.114l4.576 8.5 7.846 5.23 10.46 1.96 7.845-2.614 9.153 2.615 11.768-2.615 7.846-7.846 1.96-5.884.655-7.191-7.846-1.308-6.537-3.922z"></path></svg></div>
-                    <div id="pegtopthree"><svg xmlns="http://www.w3.org/2000/svg" fill="none" height="46" width="65"><path fill="#bc6c25" d="M49.157 15.69L44.58.655l-12.422 1.96L21.044.654l-8.499 2.615-6.538 5.23-4.576 9.153v11.114l4.576 8.5 7.846 5.23 10.46 1.96 7.845-2.614 9.153 2.615 11.768-2.615 7.846-7.846 1.96-5.884.655-7.191-7.846-1.308-6.537-3.922z"></path></svg></div>
-                </div>
-            </div>
         </div>
     </div>
 
-    <!-- Секция 2: Список отзывов -->
-    <div id="tab-reviews" class="section-content" style="gap: 25px; margin-top: 20px;">
+    <!-- ВКЛАДКА 2: Список отзывов -->
+    <div id="tab-reviews" class="section-content {% if active_tab == 'reviews' %}active{% endif %}" style="gap: 25px; margin-top: 15px;">
         
         {% set total_reviews = reviews|length %}
         {% set ns = namespace(total_score=0) %}
@@ -342,75 +277,37 @@ REVIEWS_TEMPLATE = """
         {% endfor %}
         {% set avg = (ns.total_score / total_reviews) if total_reviews > 0 else 5 %}
 
-        <div class="stats-banner w-4/5 max-w-[300px]">
-            <div class="stats-emoji">
-                {% if avg < 3 %}
-                    😢
-                {% elif avg < 4.0 %}
-                    😐
-                {% else %}
-                    😁
-                {% endif %}
-            </div>
+        <div class="stats-banner w-4/5 max-w-[350px]">
+            <div class="stats-emoji">{% if avg < 3 %}😢{% elif avg < 4.0 %}😐{% else %}😁{% endif %}</div>
             <div class="stats-info">
                 <h3>Рейтинг: {{ "%.1f" | format(avg) }} / 5.0</h3>
-                <p>
-                    {% if avg < 3 %} Нам есть над чем работать
-                    {% elif avg < 4.0 %} Нормально, но можем лучше
-                    {% else %} Отличные отзывы! Спасибо ❤️
-                    {% endif %}
-                </p>
+                <p>{% if avg < 3 %}Есть над чем работать{% elif avg < 4.0 %}Нормально, но можем лучше{% else %}Отличные отзывы! ❤️{% endif %}</p>
             </div>
         </div>
 
         {% for review in reviews %}
-        <div class="[--shadow:rgba(60,64,67,0.1)_0_1px_2px_0,rgba(60,64,67,0.05)_0_2px_6px_2px] w-4/5 h-auto rounded-2xl bg-[#ffffff] border border-[#e7d4c0] [box-shadow:var(--shadow)] max-w-[300px] text-[#4a3525]">
-            <div class="flex flex-col items-center justify-between pt-9 px-6 pb-6 relative">
-                <span class="relative mx-auto -mt-16 mb-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" height="46" width="65">
-                        <path stroke="#000" fill="#EAB789" d="M49.157 15.69L44.58.655l-12.422 1.96L21.044.654l-8.499 2.615-6.538 5.23-4.576 9.153v11.114l4.576 8.5 7.846 5.23 10.46 1.96 7.845-2.614 9.153 2.615 11.768-2.615 7.846-7.846 1.96-5.884.655-7.191-7.846-1.308-6.537-3.922z"></path>
-                        <path fill="#9C6750" d="M32.286 3.749c-6.94 3.65-11.69 11.053-11.69 19.591 0 8.137 4.313 15.242 10.724 19.052a20.513 20.513 0 01-8.723 1.937c-11.598 0-21-9.626-21-21.5 0-11.875 9.402-21.5 21-21.5 3.495 0 6.79.874 9.689 2.42z" clip-rule="evenodd" fill-rule="evenodd"></path>
-                        <path fill="#634647" d="M64.472 20.305a.954.954 0 00-1.172-.824 4.508 4.508 0 01-3.958-.934.953.953 0 00-1.076-.11c-.46.252-.977.383-1.502.382a3.154 3.154 0 01-2.97-2.11.954.954 0 00-.833-.634 4.54 4.54 0 01-4.205-4.507c.002-.23.022-.46.06-.687a.952.952 0 00-.213-.767 3.497 3.497 0 01-.614-3.5.953.953 0 00-.382-1.138 3.522 3.522 0 01-1.5-3.992.951.951 0 00-.762-1.227A22.611 22.611 0 0032.3 2.16 22.41 22.41 0 0022.657.001a22.654 22.654 0 109.648 43.15 22.644 22.644 0 0032.167-22.847zM22.657 43.4a20.746 20.746 0 110-41.493c2.566-.004 5.11.473 7.501 1.407a22.64 22.64 0 00.003 38.682 20.6 20.6 0 01-7.504 1.404zm19.286 0a20.746 20.746 0 112.131-41.384 5.417 5.417 0 001.918 4.635 5.346 5.346 0 00-.133 1.182A5.441 5.441 0 0046.879 11a5.804 5.804 0 00-.028.568 6.456 6.456 0 005.38 6.345 5.053 5.053 0 006.378 2.472 6.412 6.412 0 004.05 1.12 20.768 20.768 0 01-20.716 21.897z"></path>
-                        <path fill="#644647" d="M54.962 34.3a17.719 17.719 0 01-2.602 2.378.954.954 0 001.14 1.53 19.637 19.637 0 002.884-2.634.955.955 0 00-1.422-1.274z"></path>
-                        <path stroke-width="1.8" stroke="#644647" fill="#845556" d="M44.5 32.829c-.512 0-1.574.215-2 .5-.426.284-.342.263-.537.736a2.59 2.59 0 104.98.99c0-.686-.458-1.241-.943-1.726-.485-.486-.814-.5-1.5-.5zm-30.916-2.5c-.296 0-.912.134-1.159.311-.246.177-.197.164-.31.459a1.725 1.725 0 00-.086.932c.058.312.2.6.41.825.21.226.477.38.768.442.291.062.593.03.867-.092s.508-.329.673-.594a1.7 1.7 0 00.253-.896c0-.428-.266-.774-.547-1.076-.281-.302-.471-.31-.869-.311zm17.805-11.375c-.143-.492-.647-1.451-1.04-1.78-.392-.33-.348-.255-.857-.31a2.588 2.588 0 10.441 5.06c.66-.194 1.064-.788 1.395-1.39.33-.601.252-.92.06-1.58zm-22 2c-.143-.492-.647-1.451-1.04-1.78-.391-.33-.347-.255-.856-.31a2.589 2.589 0 10.44 5.06c.66-.194 1.064-.788 1.395-1.39.33-.601.252-.92.06-1.58Z"></path>
-                    </svg>
-                </span>
-                
-                <div style="display: flex; gap: 3px; margin-bottom: 8px;">
-                    {% for i in range(1, 6) %}
-                        {% if i <= review.rating|int %}
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="#ffc73a"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
-                        {% else %}
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="transparent" stroke="#ccc"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
-                        {% endif %}
-                    {% endfor %}
-                </div>
-
-                <h5 class="text-sm font-bold mb-2 text-left mr-auto text-[#5c4033]">
-                    {{ review.username }}
-                </h5>
-                <p class="w-full mb-4 text-sm text-justify text-[#6b5141]">
-                    {{ review.text }}
-                </p>
-                
-                <div class="flex items-center justify-between w-full mt-2">
-                    <span class="text-xs text-[#a48c77]">
-                        {{ review.time }}
-                    </span>
-                    
-                    <!-- Ваша кнопка лайка из Uiverse, встроенная в карточку отзыва -->
-                    <button class="Btn" onclick="likeReview('{{ review.id }}')">
-                      <div class="leftContainer">
-                        <svg viewBox="0 0 512 512" width="16" height="16" xmlns="http://www.w3.org/2000/svg">
-                          <path fill="white" d="M462.3 62.6C407.5 15.9 326 24.3 275.7 76.2L256 96.5l-19.7-20.3C186.1 24.3 104.5 15.9 49.7 62.6c-62.8 53.6-66.1 149.8-9.9 207.6l193.5 199.8c6.2 6.4 14.4 9.7 22.6 9.7s16.4-3.2 22.6-9.7L472 270.2c56.4-57.8 53.1-154-9.7-207.6zm-15.1 190.3L256 445.9 64.8 252.9c-40.8-41.9-43.1-110.5-5.7-154.5 38.3-43.9 104.5-47.5 147.2-7.5l27.9 28.7 27.9-28.7c42.7-40 108.9-36.4 147.2 7.5 37.4 44 35.1 112.6-5.7 154.5z"/>
-                        </svg>
-                        <span class="like">Like</span>
-                      </div>
-                      <div class="likeCount" id="like-count-{{ review.id }}">
-                        {{ review.likes }}
-                      </div>
-                    </button>
-                </div>
+        <div class="w-4/5 h-auto rounded-2xl bg-[#ffffff] border border-[#e7d4c0] p-6 max-w-[350px] text-[#4a3525] shadow-sm">
+            <div style="display: flex; gap: 3px; margin-bottom: 8px;">
+                {% for i in range(1, 6) %}
+                    {% if i <= review.rating|int %}
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#ffc73a"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
+                    {% else %}
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="transparent" stroke="#ccc"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            <h5 class="text-sm font-bold mb-2 text-[#5c4033]">{{ review.username }}</h5>
+            <p class="w-full mb-4 text-sm text-[#6b5141]">{{ review.text }}</p>
+            
+            <div class="flex items-center justify-between w-full mt-2">
+                <span class="text-xs text-[#a48c77]">{{ review.time }}</span>
+                <button class="Btn" onclick="likeReview('{{ review.id }}')">
+                  <div class="leftContainer">
+                    <svg viewBox="0 0 512 512" width="16" height="16" xmlns="http://www.w3.org/2000/svg"><path fill="white" d="M462.3 62.6C407.5 15.9 326 24.3 275.7 76.2L256 96.5l-19.7-20.3C186.1 24.3 104.5 15.9 49.7 62.6c-62.8 53.6-66.1 149.8-9.9 207.6l193.5 199.8c6.2 6.4 14.4 9.7 22.6 9.7s16.4-3.2 22.6-9.7L472 270.2c56.4-57.8 53.1-154-9.7-207.6zm-15.1 190.3L256 445.9 64.8 252.9c-40.8-41.9-43.1-110.5-5.7-154.5 38.3-43.9 104.5-47.5 147.2-7.5l27.9 28.7 27.9-28.7c42.7-40 108.9-36.4 147.2 7.5 37.4 44 35.1 112.6-5.7 154.5z"/></svg>
+                    <span class="like">Like</span>
+                  </div>
+                  <div class="likeCount" id="like-count-{{ review.id }}">{{ review.likes }}</div>
+                </button>
             </div>
         </div>
         {% endfor %}
@@ -420,43 +317,26 @@ REVIEWS_TEMPLATE = """
         function switchTab(tabName) {
             document.getElementById('tab-write').classList.remove('active');
             document.getElementById('tab-reviews').classList.remove('active');
+            
             if (tabName === 'write') {
                 document.getElementById('tab-write').classList.add('active');
-            } else {
+            } else if (tabName === 'reviews') {
                 document.getElementById('tab-reviews').classList.add('active');
             }
-        }
-        
-        function handleLoadingSubmit(event) {
-            event.preventDefault();
-            const form = event.target;
-            form.classList.add('hidden');
-            document.getElementById('cookie-loader-box').classList.remove('hidden');
-            setTimeout(() => {
-                form.submit();
-            }, 1000);
         }
 
         function likeReview(reviewId) {
             fetch('/like-review/' + reviewId, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
+                headers: { 'Content-Type': 'application/json' }
             })
-            .then(response => response.json())
+            .then(res => res.json())
             .then(data => {
                 if (data.success) {
                     document.getElementById('like-count-' + reviewId).innerText = data.likes;
                 }
-            })
-            .catch(error => console.error('Error:', error));
+            });
         }
-
-        {% if error %}
-            document.getElementById('glass-write').checked = true;
-            switchTab('write');
-        {% endif %}
     </script>
 </body>
 </html>
@@ -464,7 +344,15 @@ REVIEWS_TEMPLATE = """
 
 @app.route('/reviews')
 def reviews_page():
-    resp = make_response(render_template_string(REVIEWS_TEMPLATE, reviews=REVIEWS_LIST))
+    active_tab = request.args.get('tab', 'reviews')
+    error = request.args.get('error')
+    
+    resp = make_response(render_template_string(
+        SITE_TEMPLATE, 
+        reviews=load_reviews(), 
+        active_tab=active_tab,
+        error=error
+    ))
     resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
     return resp
 
@@ -486,52 +374,39 @@ def add_review():
     rating = request.form.get('rating', '5')
     text = request.form.get('text')
     
-    global REVIEWS_LIST
-    REVIEWS_LIST = load_reviews()
+    reviews = load_reviews()
+    codes = load_codes()
 
     if not username or not code or not text:
-        resp = make_response(render_template_string(REVIEWS_TEMPLATE, reviews=REVIEWS_LIST, error="Заполните все поля!"))
-        resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
-        return resp
+        return make_response(render_template_string(SITE_TEMPLATE, reviews=reviews, active_tab='write', error="Заполните все поля!"))
     
-    global PURCHASE_CODES
-    PURCHASE_CODES = load_codes()
-    
-    if code not in PURCHASE_CODES:
-        resp = make_response(render_template_string(REVIEWS_TEMPLATE, reviews=REVIEWS_LIST, error="Ошибка: Неверный код подтверждения!"))
-        resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
-        return resp
+    if code not in codes:
+        return make_response(render_template_string(SITE_TEMPLATE, reviews=reviews, active_tab='write', error="Ошибка: Неверный код подтверждения!"))
         
-    if PURCHASE_CODES[code]:
-        resp = make_response(render_template_string(REVIEWS_TEMPLATE, reviews=REVIEWS_LIST, error="Ошибка: Этот код уже был использован!"))
-        resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
-        return resp
+    if codes[code]:
+        return make_response(render_template_string(SITE_TEMPLATE, reviews=reviews, active_tab='write', error="Ошибка: Этот код уже был использован!"))
 
     if len(text) < 3 or len(text) > 500:
-        resp = make_response(render_template_string(REVIEWS_TEMPLATE, reviews=REVIEWS_LIST, error="Ошибка: Отзыв должен быть от 3 до 500 символов."))
-        resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
-        return resp
+        return make_response(render_template_string(SITE_TEMPLATE, reviews=reviews, active_tab='write', error="Ошибка: Отзыв от 3 до 500 символов."))
 
-    PURCHASE_CODES[code] = True
-    save_codes(PURCHASE_CODES)
+    codes[code] = True
+    save_codes(codes)
 
-    now = datetime.now()
-    new_id = max([r.get('id', 0) for r in REVIEWS_LIST], default=-1) + 1
+    new_id = max([r.get('id', 0) for r in reviews], default=-1) + 1
     new_review = {
         "id": new_id,
         "username": username,
         "rating": int(rating),
         "text": text,
-        "time": now.strftime("%Y-%m-%d %H:%M:%S"),
+        "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "likes": 0
     }
-    REVIEWS_LIST.insert(0, new_review)
-    save_reviews(REVIEWS_LIST)
+    reviews.insert(0, new_review)
+    save_reviews(reviews)
     
-    response = make_response(render_template_string(REVIEWS_TEMPLATE, reviews=REVIEWS_LIST))
-    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
-    return response
+    return make_response(render_template_string(SITE_TEMPLATE, reviews=reviews, active_tab='reviews'))
 
+# --- Discord Bot код ---
 @app.route('/api/order', methods=['POST'])
 def api_order():
     try:
@@ -666,7 +541,7 @@ async def review_command(ctx):
     )
     
     view = View()
-    view.add_item(Button(label="Смотреть отзывы на сайте", style=discord.ButtonStyle.link, url="https://discord-bot-new-production.up.railway.app/reviews"))
+    view.add_item(Button(label="Смотреть на сайте", style=discord.ButtonStyle.link, url="https://discord-bot-new-production.up.railway.app/reviews"))
     
     await ctx.send(embed=embed, view=view)
 
